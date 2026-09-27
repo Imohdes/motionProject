@@ -1,6 +1,7 @@
-// Renders src/index.html frame-by-frame in headless Chromium and encodes an H.264 MP4.
-//   node scripts/render.mjs                -> output/graduate-development.mp4
-//   node scripts/render.mjs --stills 1,4.5 -> frames/still-*.png (quick previews)
+// Renders a page from src/ frame-by-frame in headless Chromium and encodes an H.264 MP4.
+//   node scripts/render.mjs                                    -> output/graduate-development.mp4
+//   node scripts/render.mjs --page typo/index.html --out output/graduate-development-typography.mp4
+//   node scripts/render.mjs --stills 1,4.5                     -> frames/still-*.png (quick previews)
 import { chromium } from 'playwright';
 import ffmpegPath from 'ffmpeg-static';
 import { spawn } from 'node:child_process';
@@ -13,7 +14,9 @@ import { fileURLToPath } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
 const stillsArg = args.includes('--stills') ? (args[args.indexOf('--stills') + 1] || '1.5,4.8,8.2,11.5,15.5') : null;
-const out = join(root, 'output', 'graduate-development.mp4');
+const opt = (k, d) => args.includes(k) ? args[args.indexOf(k) + 1] : d;
+const pagePath = opt('--page', 'index.html');
+const out = join(root, opt('--out', 'output/graduate-development.mp4'));
 
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.woff2': 'font/woff2', '.css': 'text/css' };
 const server = createServer(async (req, res) => {
@@ -24,7 +27,7 @@ const server = createServer(async (req, res) => {
     res.end(body);
   } catch { res.writeHead(404); res.end(); }
 }).listen(0);
-const url = `http://127.0.0.1:${server.address().port}/index.html`;
+const url = `http://127.0.0.1:${server.address().port}/${pagePath}`;
 
 const exe = process.env.CHROMIUM_PATH || (existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : undefined);
 const browser = await chromium.launch({ executablePath: exe, args: ['--force-color-profile=srgb', '--disable-gpu'] });

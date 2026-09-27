@@ -23,6 +23,28 @@ The same two characters stay on screen the whole time, with identical silhouette
 - `letter-spacing` is zero, so the joins never break.
 - Each reveal is a soft-edged mask that travels **right → left** while the text slides leftward. The exit continues in the same direction, and a gold accent bar grows from the right.
 
+## Typography film (10 s, no people)
+
+**Output:** [`output/graduate-development-typography.mp4`](output/graduate-development-typography.mp4). It's 1080×1920, 30 fps and exactly 10.00 s, and the source is in `src/typo/typo.js`.
+
+This film is Arabic typography only, set in a dark deep-blue space using the HRDF-inspired palette: #005688 blue, #00AA5E green and very subtle #DC7B2C orange accents. The phrases are extruded type with a bevel highlight, glow and reflections on a glass floor. The space around them has floating glass panes, volumetric beams, depth-of-field particles and light streaks.
+
+A single blue-green light line runs **right → left** through the whole film. As it passes each phrase it reveals it with a thin vertical light blade, and each phrase rises out of depth as it appears. The line then carries on to the next phrase, and the camera follows it, so the film has no cuts.
+
+| Time | Phrase |
+|---|---|
+| 0–2 s | The light travels through darkness and reveals **رحلتك تبدأ هنا** |
+| 2–4 s | The first phrase dissolves right → left and **تعلّم** appears; the line continues |
+| 4–6 s | The camera tracks the line to **طوّر مهاراتك**, past glass panes and green particles |
+| 6–8 s | The same motion continues to **اكتسب الخبرة**; the environment brightens |
+| 8–10 s | Light paths converge to the centre, a flash reveals the hero line **وانطلق لمستقبلك**, a light sweep crosses it, the camera slowly pushes in, and the phrase stays on screen at the end |
+
+Every phrase is drawn with canvas `fillText` and `direction = 'rtl'`, so Chromium's text engine shapes it: the letters are joined, the shadda is correct and the words are never reversed.
+
+```bash
+node scripts/render.mjs --page typo/index.html --out output/graduate-development-typography.mp4
+```
+
 ## Rendering
 
 ```bash
