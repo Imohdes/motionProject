@@ -64,6 +64,25 @@ This is an abstract, supporting background with no text, logos, icons, people or
 node scripts/render.mjs --page bg/index.html --out output/brand-background-loop-4k.mp4 --crf 16
 ```
 
+## Animated abstract background (from a still, 1080p)
+
+**Output:** [`output/abstract-background-loop-1080p.mp4`](output/abstract-background-loop-1080p.mp4). It's 1920×1080, 30 fps and exactly 20.00 s, and it loops seamlessly. The source image is `assets/abstract-source.webp` and the script is `scripts/animate_still.py`.
+
+The supplied image is the only picture used. Its composition, shapes and colours are preserved, and nothing is added. The animation consists of:
+
+- **Wave-like flow:** a smooth displacement field of a few pixels, with waves travelling left → right through the orange and blue surfaces.
+- **Parallax:** the orange foreground moves most, while the blue layers and the green accent move less and slightly out of phase. Soft, heavily blurred colour masks drive this, so nothing tears or deforms.
+- **Soft light along the lines:** two slow pulses travel along the existing thin glowing lines. They come from a mask of the image's own lines and only add brightness.
+- **Breathing glow** of about 1.5 %, and a **push-in** of at most 0.9 %.
+
+Every term completes whole cycles per loop, so frame 600 equals frame 0. The encode uses a static dither and equal I/P quantisers, so the loop point is no more visible than any keyframe inside the clip.
+
+```bash
+pip install opencv-python-headless numpy
+python3 scripts/animate_still.py                    # -> output/abstract-background-loop-1080p.mp4
+python3 scripts/animate_still.py --stills           # preview PNGs in frames/
+```
+
 ## Rendering
 
 ```bash
