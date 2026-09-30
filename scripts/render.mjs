@@ -35,8 +35,9 @@ const page = await browser.newPage({ viewport: { width: 1080, height: 1920 }, de
 page.on('pageerror', e => { console.error('page error:', e); process.exit(1); });
 await page.goto(url);
 await page.waitForFunction(() => window.FILM && window.FILM.ready);
-const { FPS, DURATION, fontOK } = await page.evaluate(() => window.FILM);
-if (!fontOK) throw new Error('Arabic font (Cairo) failed to load');
+const { FPS, DURATION, fontOK, W, H } = await page.evaluate(() => window.FILM);
+if (fontOK === false) throw new Error('Arabic font (Cairo) failed to load');
+if (W && H) await page.setViewportSize({ width: W, height: H });
 const stage = await page.$('#stage');
 const shot = async t => { await page.evaluate(t => window.FILM.renderFrame(t), t); return stage.screenshot({ type: 'png' }); };
 
@@ -49,12 +50,14 @@ if (stillsArg) {
 } else {
   await mkdir(dirname(out), { recursive: true });
   const total = Math.round(DURATION * FPS);
+  // --range a:b renders frames [a, b) only (for splitting long renders into chunks; join with ffmpeg concat)
+  const [f0, f1] = (opt('--range', `0:${total}`)).split(':').map(Number);
   const ff = spawn(ffmpegPath, ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-i', '-',
-    '-c:v', 'libx264', '-preset', 'slow', '-crf', '17', '-pix_fmt', 'yuv420p', '-profile:v', 'high',
+    '-c:v', 'libx264', '-preset', 'slow', '-crf', opt('--crf', '17'), '-pix_fmt', 'yuv420p', '-profile:v', 'high',
     '-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709', '-movflags', '+faststart', out],
     { stdio: ['pipe', 'inherit', 'inherit'] });
   const done = new Promise((ok, fail) => ff.on('close', c => c ? fail(new Error('ffmpeg ' + c)) : ok()));
-  for (let f = 0; f < total; f++) {
+  for (let f = f0; f < Math.min(f1, total); f++) {
     const buf = await shot(f / FPS);
     if (!ff.stdin.write(buf)) await new Promise(r => ff.stdin.once('drain', r));
     if (f % 30 === 0) console.log(`frame ${f}/${total}`);

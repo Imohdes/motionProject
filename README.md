@@ -45,6 +45,25 @@ Every phrase is drawn with canvas `fillText` and `direction = 'rtl'`, so Chromiu
 node scripts/render.mjs --page typo/index.html --out output/graduate-development-typography.mp4
 ```
 
+## Brand background loop (4K, 16:9)
+
+**Output:** [`output/brand-background-loop-4k.mp4`](output/brand-background-loop-4k.mp4). It's 3840×2160, 30 fps and a 20 s **seamless loop**, and the source is in `src/bg/bg.js`.
+
+This is an abstract, supporting background with no text, logos, icons, people or objects.
+
+- **Deep blue #005688 dominates.** It's a rich radial field that is slightly lifted in the centre and falls off to near-black blue at the edges, and it breathes once per loop.
+- **Warm orange #DC7B2C is the secondary glow.** A soft warm field blends into the bottom-right, with a faint echo in the top-left. A few thin orange light lines add to it.
+- **Green #03A76A is only a hint.** One thin line and a small glow in the lower-left surface briefly once per loop.
+- **Thin light lines enter from the sides.** They curve gently along the top and bottom bands and around the edges, and slow light pulses travel along them. Each line sways slightly, with a parallax depth.
+- **Depth:** two very wide translucent glass bands with faint specular edges, and a handful of soft out-of-focus motes.
+- **The centre is left clear** as negative space for typography, people or products.
+
+**Seamless loop:** every motion is a whole number of cycles per 20 s loop. The frame at 20 s is pixel-identical to frame 0, so the clip loops endlessly with no seam.
+
+```bash
+node scripts/render.mjs --page bg/index.html --out output/brand-background-loop-4k.mp4 --crf 16
+```
+
 ## Rendering
 
 ```bash
