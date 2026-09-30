@@ -83,6 +83,27 @@ python3 scripts/animate_still.py                    # -> output/abstract-backgro
 python3 scripts/animate_still.py --stills           # preview PNGs in frames/
 ```
 
+## Flowing ribbons (evolving version, 1080p)
+
+**Output:** [`output/flowing-ribbons-1080p.mp4`](output/flowing-ribbons-1080p.mp4). It's 1920×1080, 30 fps and exactly 20.00 s, and the source is in `src/ribbons/ribbons.js`.
+
+This is the same abstract background with **clearly visible, medium-intensity motion**. The composition is rebuilt as a live scene in the source image's palette, which was sampled from `assets/abstract-source-2.webp`, so the shapes can genuinely move:
+
+- **The orange field** sweeps and reshapes with the main ribbon, and warm tones cover roughly 50–60 % of the frame throughout.
+- **The deep-blue dome** slides and changes curvature underneath it.
+- **The green wedge** opens, narrows and travels as the ribbons cross.
+- **The crossing point** of the glowing lines moves across the composition.
+- **Ribbons enter and leave:** a new ribbon slides in from the left edge (about 3–13 s), and faint lower-left lines drift out of frame (about 9–19 s).
+- **Light travels** left → right along every glowing line.
+- **Camera:** a slow push-in (+7.5 %) with lateral drift, and parallax depths for the navy base, blue dome, green wedge, orange field and foreground ribbon.
+
+All motion is built from slow sine waves with periods of about 12–35 s, eased so nothing is abrupt. There are no particles, flashes or cuts.
+
+```bash
+node scripts/render.mjs --page ribbons/index.html --out output/flowing-ribbons-1080p.mp4 --crf 14
+# (or in parallel chunks: add --range 0:200 / 200:400 / 400:600 and join with ffmpeg concat)
+```
+
 ## Rendering
 
 ```bash
