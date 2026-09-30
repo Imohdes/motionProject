@@ -21,11 +21,13 @@ const mixc = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], 
 function mk(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
 // slow organic motion: sum of low-frequency sines (periods ~12–35 s)
 const osc = (t, base, ...terms) => terms.reduce((v, [a, f, p]) => v + a * Math.sin(TAU * f * t + p), base);
+// anchored: equals `ref` (the reference image's value) at t = 0, then moves exactly like osc
+const osc0 = (t, ref, ...terms) => terms.reduce((v, [a, f, p]) => v + a * (Math.sin(TAU * f * t + p) - Math.sin(p)), ref);
 
 // palette sampled from the source image
 const C = {
   oBright: hex('#ff8c18'), oMid: hex('#f36e17'), oLow: hex('#c85516'), oDeep: hex('#7a3418'),
-  dark: hex('#372227'), navy: hex('#0b2a63'), navyDeep: hex('#012456'), blue: hex('#003175'), blueHi: hex('#0a4aa6'),
+  dark: hex('#372227'), navy: hex('#002650'), navyDeep: hex('#012050'), blue: hex('#003175'), blueHi: hex('#003e8e'),
   band: hex('#463a67'), green: hex('#2f8f52'), teal: hex('#0c6a58'), tealDeep: hex('#02374e'),
 };
 
@@ -44,10 +46,10 @@ function sample(segs, n) {
 
 function scene(t) {
   // crossing point of the main lines travels across the composition
-  const P = [osc(t, .57, [.085, .045, 1.2], [.03, .09, .3]), osc(t, .48, [.03, .05, 2.0], [.012, .11, 1])];
+  const P = [osc0(t, .56, [.085, .045, 1.2], [.03, .09, .3]), osc0(t, .40, [.04, .05, 2.0], [.012, .11, 1])];
   // main line A: left edge → P → top-right (upper edge of the green wedge)
-  const a0 = [-.06, osc(t, .71, [.07, .04, .5])];
-  const a2 = [1.06, osc(t, .3, [.07, .055, 2.6])];
+  const a0 = [-.06, osc0(t, .68, [.07, .04, .5])];
+  const a2 = [1.06, osc0(t, .23, [.07, .055, 2.6])];
   const tan = [1, (a2[1] - a0[1]) * .55];
   const tl = Math.hypot(...tan); tan[0] /= tl; tan[1] /= tl;
   const bendA = osc(t, 0, [.05, .06, 4]);
@@ -56,23 +58,23 @@ function scene(t) {
     [P, [P[0] + tan[0] * .2, P[1] + tan[1] * .2], [a2[0] - .22, a2[1] + .06 - bendA], a2],
   ];
   // line B: from the lower left, through P, bending down to the right (lower edge of the green wedge)
-  const b0 = [-.06, osc(t, .79, [.05, .05, 3.3])];
-  const b2 = [1.06, osc(t, .62, [.07, .05, 4.0], [.02, .1, 1])];
+  const b0 = [-.06, osc0(t, .74, [.05, .05, 3.3])];
+  const b2 = [1.06, osc0(t, .61, [.07, .05, 4.0], [.02, .1, 1])];
   const B = [
     [b0, [b0[0] + .3, b0[1] - .02], [P[0] - .18, P[1] + .005], P],
     [P, [P[0] + .2, P[1] - .005], [b2[0] - .22, b2[1] - .09], b2],
   ];
   // blue dome D: rises from the lower left to a peak, descends off the bottom-right
-  const dp = [osc(t, .44, [.1, .04, 3.0]), osc(t, .6, [.04, .06, .8])];
-  const d0 = [-.06, osc(t, .9, [.07, .045, 1.9])];
-  const d2 = [osc(t, .99, [.09, .045, 1.0]), 1.06];
+  const dp = [osc0(t, .43, [.1, .04, 3.0]), osc0(t, .555, [.04, .06, .8])];
+  const d0 = [-.06, osc0(t, .91, [.07, .045, 1.9])];
+  const d2 = [osc0(t, .99, [.09, .045, 1.0]), 1.06];
   const D = [
     [d0, [d0[0] + .18, d0[1] - .2], [dp[0] - .2, dp[1]], dp],
     [dp, [dp[0] + .22, dp[1]], [d2[0] - .15, d2[1] - .28], d2],
   ];
   // upper-right arc E: leaves the crossing and sweeps up out of the top edge
   const e0 = [P[0] + .02, P[1] - .004];
-  const e2 = [osc(t, .99, [.06, .05, .7]), -.06];
+  const e2 = [osc0(t, .99, [.06, .05, .7]), -.06];
   const E = [[e0, [e0[0] + .22, e0[1] - .03], [e2[0] - .06, e2[1] + osc(t, .3, [.08, .06, 2])], e2]];
   // a ribbon that slowly enters from the left edge (foreground, runs through the warm band)
   const inX = lerp(-1.15, .02, ease(range(t, 2.5, 13.5)));
@@ -88,7 +90,7 @@ function scene(t) {
 
 // ---------------------------------------------------------------- camera: slow push-in + lateral drift, per-layer parallax
 function camera(t) {
-  return { s: 1 + .075 * ease(t / DURATION), x: lerp(.028, -.03, ease(t / DURATION)) * W, y: lerp(-.01, .012, ease(t / DURATION)) * H };
+  return { s: 1 + .075 * ease(t / DURATION), x: lerp(0, -.05, ease(t / DURATION)) * W, y: lerp(0, .02, ease(t / DURATION)) * H };
 }
 function mapper(cam, k, scale) {         // k = parallax depth (1 = foreground)
   const s = 1 + (cam.s - 1) * k, ox = cam.x * k, oy = cam.y * k;
@@ -143,17 +145,15 @@ function drawFields(t, S, cam) {
     return gg;
   };
   // warm haze spilling below A → the orange-to-violet band over the blue
-  c.save(); c.filter = 'blur(26px)'; c.globalAlpha = .95;
-  orangePath(c, mO); c.fillStyle = orangeFill(c); c.fill(); c.restore();
-  c.save(); c.filter = 'blur(12px)'; c.globalAlpha = .6; c.translate(0, LH * .03);
+  c.save(); c.filter = 'blur(22px)'; c.globalAlpha = .5;
   orangePath(c, mO); c.fillStyle = orangeFill(c); c.fill(); c.restore();
   c.save(); c.filter = 'blur(2.5px)';
   orangePath(c, mO); c.fillStyle = orangeFill(c); c.fill(); c.restore();
   // top-right darkening inside the orange (as in the source)
   c.save(); orangePath(c, mO); c.clip();
-  g = c.createLinearGradient(mO([.55, 0])[0], 0, mO([.98, 0])[0], 0);
-  g.addColorStop(0, rgba(C.dark, 0)); g.addColorStop(1, rgba(C.dark, .92));
-  c.fillStyle = g; c.fillRect(0, 0, LW, LH * .6); c.restore();
+  g = c.createLinearGradient(mO([.42, 0])[0], mO([0, .45])[1], mO([.9, 0])[0], mO([0, .02])[1]);
+  g.addColorStop(0, rgba(C.dark, 0)); g.addColorStop(.55, rgba(C.dark, .55)); g.addColorStop(1, rgba(C.dark, 1));
+  c.fillStyle = g; c.fillRect(0, 0, LW, LH); c.restore();
 
   // green wedge between A (right) and B (right), fading to deep teal at the edge
   const wedge = cc => {
@@ -238,7 +238,7 @@ function renderFrame(t) {
   const b = bloomC.getContext('2d');
   b.filter = 'none'; b.clearRect(0, 0, bloomC.width, bloomC.height);
   b.filter = 'brightness(.9) contrast(1.7) blur(5px)'; b.drawImage(canvas, 0, 0, bloomC.width, bloomC.height);
-  ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = .22; ctx.drawImage(bloomC, 0, 0, W, H);
+  ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = .1; ctx.drawImage(bloomC, 0, 0, W, H);
   ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
   const vg = ctx.createRadialGradient(W / 2, H / 2, H * .45, W / 2, H / 2, W * .65);
   vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.28)');

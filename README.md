@@ -85,23 +85,22 @@ python3 scripts/animate_still.py --stills           # preview PNGs in frames/
 
 ## Flowing ribbons (evolving version, 1080p)
 
-**Output:** [`output/flowing-ribbons-1080p.mp4`](output/flowing-ribbons-1080p.mp4). It's 1920×1080, 30 fps and exactly 20.00 s, and the source is in `src/ribbons/ribbons.js`.
+**Output:** [`output/flowing-ribbons-1080p.mp4`](output/flowing-ribbons-1080p.mp4). It's 1920×1080, 30 fps and exactly 20.00 s, and the script is `scripts/ribbons_warp.py`.
 
-This is the same abstract background with **clearly visible, medium-intensity motion**. The composition is rebuilt as a live scene in the source image's palette, which was sampled from `assets/abstract-source-2.webp`, so the shapes can genuinely move:
+The **colours are exactly the reference's.** The reference image (`assets/abstract-source-2.webp`) is the only colour source, and frame 0 *is* the reference. The clear, medium-intensity motion comes from a smooth warp that follows evolving ribbon curves:
 
-- **The orange field** sweeps and reshapes with the main ribbon, and warm tones cover roughly 50–60 % of the frame throughout.
-- **The deep-blue dome** slides and changes curvature underneath it.
-- **The green wedge** opens, narrows and travels as the ribbons cross.
-- **The crossing point** of the glowing lines moves across the composition.
-- **Ribbons enter and leave:** a new ribbon slides in from the left edge (about 3–13 s), and faint lower-left lines drift out of frame (about 9–19 s).
-- **Light travels** left → right along every glowing line.
-- **Camera:** a slow push-in (+7.5 %) with lateral drift, and parallax depths for the navy base, blue dome, green wedge, orange field and foreground ribbon.
+- **Anchors** sampled along the ribbon curves move with the motion design (the same curves as `src/ribbons/ribbons.js`). A Gaussian-weighted field interpolates their displacement, which is then integrated as a velocity field by scaling and squaring. This makes the warp a diffeomorphism, so ribbons bend, slide and reshape without ever folding.
+- **What visibly changes:** the orange field sweeps, the blue dome slides and changes curvature, the green wedge opens, narrows and travels, and the crossing point of the lines moves across the frame.
+- **Camera:** each ribbon has its own parallax depth, and the background follows a slow push-in (+7.5 %) with lateral drift.
+- **Light pulses** travel left → right along the image's own glowing lines, adding brightness only.
+- **Frame edges** use a monotonic soft clamp instead of mirroring, so lines never kink.
 
-All motion is built from slow sine waves with periods of about 12–35 s, eased so nothing is abrupt. There are no particles, flashes or cuts.
+`src/ribbons/ribbons.js` is the earlier fully procedural version. It's kept for reference, but its colours are approximate.
 
 ```bash
-node scripts/render.mjs --page ribbons/index.html --out output/flowing-ribbons-1080p.mp4 --crf 14
-# (or in parallel chunks: add --range 0:200 / 200:400 / 400:600 and join with ffmpeg concat)
+pip install opencv-python-headless numpy
+python3 scripts/ribbons_warp.py             # -> output/flowing-ribbons-1080p.mp4
+python3 scripts/ribbons_warp.py --stills    # preview PNGs at 0/5/10/15/20 s in frames/
 ```
 
 ## Rendering
