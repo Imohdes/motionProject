@@ -103,6 +103,20 @@ python3 scripts/ribbons_warp.py             # -> output/flowing-ribbons-1080p.mp
 python3 scripts/ribbons_warp.py --stills    # preview PNGs at 0/5/10/15/20 s in frames/
 ```
 
+## Poster push-in (camera-only, 8 s)
+
+**Output:** [`output/poster-pushin-8s.mp4`](output/poster-pushin-8s.mp4). It's 1080×1920, 30 fps and exactly 8.00 s. The source is `assets/poster-source.jpg` and the script is `scripts/poster_pushin.py`.
+
+The still is treated as one flat layer, like a printed poster filmed by a camera. Each frame is a single affine resample (uniform scale + translation, no rotation) of the original pixels. Nothing in the image is animated, warped or regenerated.
+
+- **Push-in:** 1.000 → 1.018 (1.8 %) with a smooth sine ease-in-out.
+- **Float:** a drift of at most 0.36 % that always stays inside the push-in margin. The frame's footprint never leaves the source image, so no edge is ever revealed.
+- **Fit:** the 1119×2000 source is scaled to cover 1080×1920, which trims about 5 px at the top and bottom.
+
+```bash
+python3 scripts/poster_pushin.py [source.jpg] [out.mp4]
+```
+
 ## Rendering
 
 ```bash
