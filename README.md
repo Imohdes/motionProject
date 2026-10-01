@@ -152,6 +152,15 @@ This is a localized puppet warp of the source pixels. Each body part gets its ow
 
 **Not faked:** a true 3-D head turn and blinking. Both need a generative model.
 
+## Portrait: lights only (6 s, 1080×1920)
+
+**Output:** [`output/portrait-lights-6s.mp4`](output/portrait-lights-6s.mp4). The script is `scripts/portrait_lights.py`. The man is **pixel-locked**: his pixels are copied from the source in every frame (verified identical), with no zoom and no camera move. Only the background lights move:
+
+- **Light pulses:** clearly visible pulses travel along the existing light trails in two directions, with a soft glow halo.
+- **Orange band:** the large orange light band breathes gently with a slow travelling wave.
+
+All motion repeats every 6 s, so the clip also loops seamlessly.
+
 ## Rendering
 
 ```bash
