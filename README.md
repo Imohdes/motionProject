@@ -137,6 +137,21 @@ python3 scripts/portrait_alive.py --src assets/portrait2-source.jpg --out output
 
 **Not included:** real arm motion (uncrossing and re-crossing the arms). That requires a generative image-to-video model and cannot be faked by warping the still.
 
+## Portrait with body motion (6 s, 1080×1920)
+
+**Output:** [`output/portrait3-motion-6s.mp4`](output/portrait3-motion-6s.mp4). The script is `scripts/portrait_motion.py`, the source is `assets/portrait3-source.webp`, and the camera is locked with no zoom.
+
+This is a localized puppet warp of the source pixels. Each body part gets its own small rigid motion about an anatomical pivot, blended with feathered masks, so nothing is regenerated and nothing tears:
+
+- **Torso:** a weight shift and sway, rotating up to 0.85° about the hips.
+- **Head:** a tilt of up to 2.4° plus a sideways shift of up to 8 px about the neck. The shemagh drape follows with a 0.3 s lag.
+- **Top forearm:** lifts up to 1.9° about its elbow at 2–4 s, then settles.
+- **Badge:** a small pendulum swing of up to 2.8° about its clip, settling by 5.4 s.
+- **Breathing** in the chest and shoulders.
+- **Light** travels along the background trails, with the figure protected.
+
+**Not faked:** a true 3-D head turn and blinking. Both need a generative model.
+
 ## Rendering
 
 ```bash
