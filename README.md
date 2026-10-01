@@ -117,6 +117,19 @@ The still is treated as one flat layer, like a printed poster filmed by a camera
 python3 scripts/poster_pushin.py [source.jpg] [out.mp4]
 ```
 
+## Living portrait (6 s, 1080×1920)
+
+**Output:** [`output/portrait-alive-6s.mp4`](output/portrait-alive-6s.mp4). The script is `scripts/portrait_alive.py`, and the source image is `assets/portrait-source.jpg`, the same image as the poster push-in.
+
+It is built only from the source pixels:
+
+- **Light trails:** light travels along the existing trails, as a brightness-only effect, so their shapes, colours and positions are unchanged.
+- **Protected figure:** her face, hijab, hands, badge and outline are excluded from the effect by a protection mask built from her silhouette.
+- **Breathing:** a very subtle breath, a smooth rise of at most 2 px in the chest and arms. The head and face have exactly zero displacement.
+- **Push-in:** about 0.75 %, eased.
+
+**Not included:** real arm motion (uncrossing and re-crossing the arms). That requires a generative image-to-video model and cannot be faked by warping the still.
+
 ## Rendering
 
 ```bash
