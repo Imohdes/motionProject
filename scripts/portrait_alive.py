@@ -7,7 +7,9 @@
 The woman's upper figure (face, hijab, hands, badge, outline) is excluded from the light effect by a
 protection mask. Arm motion (uncrossing / crossing) is NOT synthesised: that needs a generative model.
 
-    python3 scripts/portrait_alive.py [--stills]
+    python3 scripts/portrait_alive.py [--stills]                                   # woman portrait (defaults)
+    python3 scripts/portrait_alive.py --src assets/portrait2-source.jpg --out output/portrait2-alive-6s.mp4 \
+        --mask light --breath 640,1330 --poly "$(cat assets/portrait2-outline.txt)"   # man portrait
 """
 import subprocess
 import sys
@@ -17,8 +19,15 @@ import cv2
 import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent
-SRC = ROOT / 'assets' / 'portrait-source.jpg'
-OUT = ROOT / 'output' / 'portrait-alive-6s.mp4'
+def opt(k, d):
+    return sys.argv[sys.argv.index(k) + 1] if k in sys.argv else d
+
+
+SRC = ROOT / opt('--src', 'assets/portrait-source.jpg')
+OUT = ROOT / opt('--out', 'output/portrait-alive-6s.mp4')
+MASK = opt('--mask', 'dark')                         # dark clothing (abaya) or light clothing (thobe)
+POLY = opt('--poly', '')                             # explicit figure outline "x,y;x,y;..." (source px), replaces the auto mask
+BREATH = [int(v) for v in opt('--breath', '560,1250').split(',')]      # chest band top,bottom (source px)
 W, H, FPS, DUR = 1080, 1920, 30, 6.0
 PUSH = .0075
 FFMPEG = str(ROOT / 'node_modules' / 'ffmpeg-static' / 'ffmpeg')
@@ -36,14 +45,23 @@ trail = (np.clip((hp - .02) / .06, 0, 1) * np.clip((hsv[..., 1] - .2) / .3, 0, 1
 trail = cv2.GaussianBlur(trail, (0, 0), 1.0)
 
 # ---------------------------------------------------------------- protection: the woman's upper figure
-dark = (hsv[..., 2] < 70 / 255).astype(np.uint8) * 255
-dark = cv2.morphologyEx(dark, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (45, 45)))
-n, lab, st, _ = cv2.connectedComponentsWithStats(dark)
+if MASK == 'dark':
+    fig = (hsv[..., 2] < 70 / 255)
+else:                                              # white thobe + red shemagh
+    hue = hsv[..., 0] * 180
+    fig = ((hsv[..., 1] < .12) & (hsv[..., 2] > .78)) | (((hue < 8) | (hue > 165)) & (hsv[..., 1] > .45) & (hsv[..., 2] > .45))
+fig = fig.astype(np.uint8) * 255
+fig = cv2.morphologyEx(fig, cv2.MORPH_OPEN, np.ones((5, 5), np.uint8))
+fig = cv2.morphologyEx(fig, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (45, 45)))
+n, lab, st, _ = cv2.connectedComponentsWithStats(fig)
 person = (lab == 1 + np.argmax(st[1:, cv2.CC_STAT_AREA])).astype(np.uint8)
 hull = cv2.convexHull(cv2.findNonZero(person))
 protect = np.zeros((sh, sw), np.uint8)
 cv2.fillConvexPoly(protect, hull, 255)
-protect = cv2.dilate(protect, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (71, 71)))
+if POLY:
+    protect[:] = 0
+    cv2.fillPoly(protect, [np.array([[int(v) for v in p.split(',')] for p in POLY.split(';')], np.int32)], 255)
+protect = cv2.dilate(protect, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (41, 41) if POLY else (71, 71)))
 protect = cv2.GaussianBlur(protect.astype(np.float32) / 255, (0, 0), 12)
 trail *= (1 - protect)
 
@@ -51,7 +69,7 @@ trail *= (1 - protect)
 ys, xs = np.mgrid[0:sh, 0:sw].astype(np.float32)
 x0, x1 = hull[:, 0, 0].min(), hull[:, 0, 0].max()
 # chest band: 0 above the shoulders (face untouched), peaks over the chest/arms, fades out by the waist
-band = np.clip((ys - 560) / 220, 0, 1) * np.clip((1250 - ys) / 300, 0, 1)
+band = np.clip((ys - BREATH[0]) / 220, 0, 1) * np.clip((BREATH[1] - ys) / 300, 0, 1)
 across = np.exp(-(((xs - (x0 + x1) / 2) / ((x1 - x0) * .6)) ** 2))
 breath_w = (band * across).astype(np.float32)
 
@@ -87,9 +105,12 @@ def frame(i):
 
 def main():
     if '--stills' in sys.argv:
-        for t in (0, 1.5, 3, 4.5):
-            cv2.imwrite(str(ROOT / 'frames' / f'portrait-{t}.png'), frame(int(t * FPS)))
-        cv2.imwrite(str(ROOT / 'frames' / 'portrait-trailmask.png'), cv2.resize((trail * 255).astype(np.uint8), (560, 1000)))
+        for t in (0.7, 2.2):
+            cv2.imwrite(str(ROOT / 'frames' / f'{OUT.stem}-{t}.png'), frame(int(t * FPS)))
+        vis = src8.copy(); pm = protect > .5
+        vis[pm] = (vis[pm] * .5 + np.array([0, 255, 0]) * .5).astype(np.uint8)
+        vis = np.maximum(vis, (trail[..., None] * 255).astype(np.uint8))
+        cv2.imwrite(str(ROOT / 'frames' / f'{OUT.stem}-mask.png'), cv2.resize(vis, (sw // 2, sh // 2)))
         return
     ff = subprocess.Popen([FFMPEG, '-y', '-loglevel', 'error', '-f', 'rawvideo', '-pix_fmt', 'bgr24', '-s', f'{W}x{H}',
                            '-r', str(FPS), '-i', '-', '-c:v', 'libx264', '-preset', 'slow', '-crf', '13',

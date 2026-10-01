@@ -128,6 +128,13 @@ It is built only from the source pixels:
 - **Breathing:** a very subtle breath, a smooth rise of at most 2 px in the chest and arms. The head and face have exactly zero displacement.
 - **Push-in:** about 0.75 %, eased.
 
+**Second portrait:** [`output/portrait2-alive-6s.mp4`](output/portrait2-alive-6s.mp4) gets the same treatment. He wears a white thobe and a red shemagh, so his protected area comes from a traced outline (`assets/portrait2-outline.txt`) rather than the dark-clothing mask:
+
+```bash
+python3 scripts/portrait_alive.py --src assets/portrait2-source.jpg --out output/portrait2-alive-6s.mp4 \
+  --mask light --breath 640,1330 --poly "$(cat assets/portrait2-outline.txt)"
+```
+
 **Not included:** real arm motion (uncrossing and re-crossing the arms). That requires a generative image-to-video model and cannot be faked by warping the still.
 
 ## Rendering
