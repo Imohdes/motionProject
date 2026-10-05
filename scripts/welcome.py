@@ -39,15 +39,15 @@ for i in range(FPS * DUR):
     t = i / FPS
     b = 0.5 - 0.5 * math.cos(2 * math.pi * t / 4.2)
     gs = gesture(t)
-    # head: tiny welcoming tilt (~2.5 deg) toward guests plus slight dip
-    ang = math.radians(-2.5 * gs)
+    # head: tiny welcoming tilt (~6 deg) toward guests plus slight dip
+    ang = math.radians(-6.0 * gs)
     rx = (xx - hx) * math.cos(ang) - (yy - hy) * math.sin(ang) + hx - xx
     ry = (xx - hx) * math.sin(ang) + (yy - hy) * math.cos(ang) + hy - yy
-    dx = head * rx + torso * (3.0 * gs)
-    dy = head * (ry + 4.0 * gs - 1.0 * b) + torso * (-1.8 * b + 3.0 * gs)
+    dx = head * rx + torso * (10.0 * gs)
+    dy = head * (ry + 14.0 * gs - 1.5 * b) + torso * (-3.0 * b + 8.0 * gs)
     # folded arms ease open: lift and widen slightly, fingers slide/lift
-    dx += arms * (8.0 * gs) + fingers * (10.0 * gs)
-    dy += arms * (-7.0 * gs) + fingers * (-13.0 * gs)
+    dx += arms * (14.0 * gs) + fingers * (22.0 * gs)
+    dy += arms * (-26.0 * gs) + fingers * (-45.0 * gs)
     f = cv2.remap(im, xx - dx, yy - dy, cv2.INTER_CUBIC, borderMode=cv2.BORDER_REFLECT)
     f[static] = im[static]
     p.stdin.write(f.tobytes())
