@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>مؤشرات لقاءات</title>
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Fixed 1920×1080 design stage, scaled to fit any 16:9 (or other) screen -->
+  <div class="viewport">
+    <main class="stage" id="stage">
+
+      <!-- ===== Cinematic background ===== -->
+      <div class="bg" aria-hidden="true">
+        <div class="bg__base"></div>
+        <div class="bg__terrain"></div>
+        <canvas class="bg__lights" id="bgLights" width="1920" height="1080"></canvas>
+        <div class="bg__skyline"><img src="assets/img/skyline-riyadh-top.jpg" alt=""></div>
+        <div class="bg__drift"></div>
+        <div class="bg__streak bg__streak--orange"></div>
+        <div class="bg__streak bg__streak--blue"></div>
+        <div class="bg__streak bg__streak--blue2"></div>
+        <div class="bg__horizon"></div>
+        <div class="bg__vignette"></div>
+      </div>
+
+      <!-- ===== Header ===== -->
+      <header class="brand">
+        <img class="brand__logo" src="assets/img/logo-liqaat.png" alt="لقاءات – مساحة نلتقي لننمو">
+      </header>
+
+      <div class="heading">
+        <h1 class="heading__title">مؤشرات لقاءات</h1>
+        <p class="heading__sub">اختر المنطقة لاستعراض أبرز المؤشرات</p>
+        <span class="heading__line" aria-hidden="true"></span>
+      </div>
+
+      <button class="fs-btn" id="fsBtn" type="button" title="ملء الشاشة (F)" aria-label="ملء الشاشة"></button>
+
+      <!-- ===== Map (SVG built from data/map-data.js) ===== -->
+      <section class="map" aria-label="خريطة مناطق المملكة العربية السعودية">
+        <div class="map__tilt">
+          <svg id="mapSvg" class="map__svg" role="group" aria-label="المناطق الإدارية"></svg>
+        </div>
+      </section>
+
+      <!-- ===== Info panel ===== -->
+      <section class="panel" aria-live="polite">
+        <div class="panel__header">
+          <div class="panel__sky" id="panelSky"></div>
+          <div class="panel__title-wrap">
+            <h2 class="panel__title fade-swap" id="panelTitle">منطقة الرياض</h2>
+            <span class="panel__pin" id="panelPin"></span>
+          </div>
+          <div class="panel__underline" aria-hidden="true"><i></i><b></b></div>
+          <p class="panel__demo" id="demoNotice" hidden></p>
+        </div>
+
+        <div class="stats">
+          <article class="stat stat--green">
+            <span class="stat__icon" data-icon="users"></span>
+            <h3 class="stat__label">عدد الزوار</h3>
+            <strong class="stat__value" data-key="visitors">0</strong>
+            <span class="stat__bar"></span>
+          </article>
+          <article class="stat stat--blue">
+            <span class="stat__icon" data-icon="chat"></span>
+            <h3 class="stat__label">جلسات الإرشاد</h3>
+            <strong class="stat__value" data-key="guidanceSessions">0</strong>
+            <span class="stat__bar"></span>
+          </article>
+          <article class="stat stat--orange">
+            <span class="stat__icon" data-icon="board"></span>
+            <h3 class="stat__label">ورش العمل</h3>
+            <strong class="stat__value" data-key="workshops">0</strong>
+            <span class="stat__bar"></span>
+          </article>
+          <article class="stat stat--green">
+            <span class="stat__icon" data-icon="briefcase"></span>
+            <h3 class="stat__label">الفرص الوظيفية</h3>
+            <strong class="stat__value" data-key="jobOpportunities">0</strong>
+            <span class="stat__bar"></span>
+          </article>
+        </div>
+
+        <span class="panel__tick" aria-hidden="true"></span>
+        <h3 class="section-title section-title--sectors">أبرز القطاعات المستهدفة في المنطقة</h3>
+        <div class="sectors fade-swap" id="sectors"></div>
+
+        <hr class="panel__divider">
+
+        <h3 class="section-title section-title--venues">أبرز مواقع اللقاءات</h3>
+        <div class="venues fade-swap" id="venues"></div>
+      </section>
+
+      <!-- ===== Region selector bar ===== -->
+      <nav class="regionbar" id="regionBar" aria-label="اختيار المنطقة"></nav>
+
+      <p class="credit">حدود المناطق: geoBoundaries / © OpenStreetMap contributors</p>
+    </main>
+  </div>
+
+  <script src="data/regions.js"></script>
+  <script src="data/map-data.js"></script>
+  <script src="js/icons.js"></script>
+  <script src="js/background.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
