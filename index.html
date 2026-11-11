@@ -48,10 +48,13 @@
 
   /* ===== Background (same artwork) ===== */
   .bg {
-    position: absolute; inset: 0;
-    background: url("assets/background.webp") center / cover no-repeat;
+    position: absolute; inset: 0; opacity: 0; transition: opacity .8s ease;
+    background: center / cover no-repeat;
     animation: kenburns 24s ease-in-out infinite alternate;
   }
+  .bg.people { background-image: url("assets/bg_people.jpg"); }
+  .bg.city   { background-image: url("assets/bg_city.jpg"); }
+  .bg.on { opacity: 1; }
   @keyframes kenburns {
     from { transform: scale(1.0) translateX(0); }
     to   { transform: scale(1.06) translateX(-14px); }
@@ -59,7 +62,7 @@
   /* soft shade on the text side for readability */
   .shade {
     position: absolute; inset: 0;
-    background: linear-gradient(to left, rgba(4,40,80,.55) 0%, rgba(4,40,80,.25) 45%, rgba(4,40,80,0) 62%);
+    background: linear-gradient(to left, rgba(4,40,80,.35) 0%, rgba(4,40,80,.12) 45%, rgba(4,40,80,0) 60%);
   }
 
   /* ===== Slides ===== */
@@ -70,6 +73,8 @@
     opacity: 0; pointer-events: none;
   }
   .slide.active { opacity: 1; pointer-events: auto; }
+  .slide.wide { width: 82%; padding: 90px 90px 120px 40px; }
+  .slide.vision { width: 52%; }
 
   /* Title pill */
   .pill {
@@ -138,16 +143,20 @@
 
   svg { fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
 
+  .render .bg { animation: none; }
+  .render .dots { display: none; }
+  .slide.vision .body { font-size: 40px; }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; } }
 </style>
 </head>
 <body>
 <div id="stage">
-  <div class="bg"></div>
+  <div class="bg people"></div>
+  <div class="bg city"></div>
   <div class="shade"></div>
 
   <!-- 1. الرؤية والرسالة -->
-  <section class="slide">
+  <section class="slide vision" data-bg="people">
     <div class="vm">
       <div class="pill" style="animation-delay:.1s">
         <svg viewBox="0 0 48 48"><path d="M4 24s7-12 20-12 20 12 20 12-7 12-20 12S4 24 4 24z"/><circle cx="24" cy="24" r="6"/></svg>
@@ -163,7 +172,7 @@
   </section>
 
   <!-- 2. الركائز الاستراتيجية -->
-  <section class="slide">
+  <section class="slide wide" data-bg="city">
     <div class="pill">
       <svg viewBox="0 0 48 48"><path d="M24 6 4 16l20 10 20-10z"/><path d="m4 24 20 10 20-10"/><path d="m4 32 20 10 20-10"/></svg>
       <span>الركائز الاستراتيجية</span>
@@ -178,7 +187,7 @@
   </section>
 
   <!-- 3. محاور الاستراتيجية -->
-  <section class="slide">
+  <section class="slide wide" data-bg="city">
     <div class="pill">
       <svg viewBox="0 0 48 48"><circle cx="12" cy="24" r="5"/><circle cx="36" cy="11" r="5"/><circle cx="36" cy="37" r="5"/><path d="m16.5 21.5 15-8M16.5 26.5l15 8"/></svg>
       <span>محاور الاستراتيجية</span>
@@ -191,7 +200,7 @@
   </section>
 
   <!-- 4. الأهداف الاستراتيجية -->
-  <section class="slide">
+  <section class="slide wide" data-bg="city">
     <div class="pill">
       <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18"/><circle cx="24" cy="24" r="11"/><circle cx="24" cy="24" r="4"/><path d="M24 24 40 8M34 8h6v6"/></svg>
       <span>الأهداف الاستراتيجية</span>
@@ -229,6 +238,7 @@
     if (prev) { prev.classList.remove('active'); prev.classList.add('out'); setTimeout(() => prev.classList.remove('out'), 600); }
     i = (n + slides.length) % slides.length;
     slides[i].classList.add('active');
+    document.querySelectorAll('.bg').forEach(b => b.classList.toggle('on', b.classList.contains(slides[i].dataset.bg)));
     [...dots.children].forEach((d, k) => d.classList.toggle('on', k === i));
     timer = setTimeout(() => go(i + 1), HOLD);
   }
@@ -237,7 +247,21 @@
     if (e.key === 'ArrowRight') go(i - 1);
   });
   // ?slide=N opens a specific slide
-  go((+new URLSearchParams(location.search).get('slide') || 1) - 1);
+  const q = new URLSearchParams(location.search);
+  go((+q.get('slide') || 1) - 1);
+
+  // ?render=1 : frame-by-frame control used to export the GIF
+  if (q.get('render')) {
+    clearTimeout(timer);
+    document.documentElement.classList.add('render');
+    window.showAt = (n, ms) => {            // slide n (0-based) frozen at ms after it starts
+      slides.forEach((s, k) => s.classList.toggle('active', k === n));
+      slides.forEach(s => s.classList.remove('out'));
+      document.querySelectorAll('.bg').forEach(b => { b.style.transition = 'none'; b.classList.toggle('on', b.classList.contains(slides[n].dataset.bg)); });
+      [...dots.children].forEach((d, k) => d.classList.toggle('on', k === n));
+      document.getAnimations().forEach(a => { a.pause(); a.currentTime = ms; });
+    };
+  }
 </script>
 </body>
 </html>
