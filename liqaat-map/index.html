@@ -778,20 +778,20 @@ window.LIQAAT_DATA = {
     "jazan": {
       name: "جازان",
       title: "منطقة جازان",
-      visitors: 3460,
-      guidanceSessions: 112,
-      workshops: 21,
-      jobOpportunities: 148,
+      visitors: 38879,
+      guidanceSessions: 30840,
+      workshops: 59,
+      jobOpportunities: 10421,
       sectors: ["الزراعة", "الصناعة", "الثروة السمكية", "السياحة", "النقل والخدمات اللوجستية"],
       venues: []
     },
     "bahah": {
       name: "الباحة",
       title: "منطقة الباحة",
-      visitors: 1520,
-      guidanceSessions: 52,
-      workshops: 11,
-      jobOpportunities: 64,
+      visitors: 20000,
+      guidanceSessions: 16255,
+      workshops: 60,
+      jobOpportunities: 7506,
       sectors: ["السياحة", "الزراعة", "التعليم", "الرعاية الصحية", "التجارة"],
       venues: []
     },
@@ -808,10 +808,10 @@ window.LIQAAT_DATA = {
     "madinah": {
       name: "المدينة المنورة",
       title: "منطقة المدينة المنورة",
-      visitors: 6920,
-      guidanceSessions: 184,
-      workshops: 34,
-      jobOpportunities: 256,
+      visitors: 22215,
+      guidanceSessions: 7829,
+      workshops: 26,
+      jobOpportunities: 7197,
       sectors: ["الضيافة", "الصناعة", "التعليم", "الرعاية الصحية", "التجارة"],
       venues: []
     },
@@ -828,30 +828,30 @@ window.LIQAAT_DATA = {
     "hail": {
       name: "حائل",
       title: "منطقة حائل",
-      visitors: 2630,
-      guidanceSessions: 88,
-      workshops: 17,
-      jobOpportunities: 110,
+      visitors: 6322,
+      guidanceSessions: "-",
+      workshops: 60,
+      jobOpportunities: 4901,
       sectors: ["الزراعة", "السياحة", "التعدين", "التعليم", "التجارة"],
       venues: []
     },
     "tabuk": {
       name: "تبوك",
       title: "منطقة تبوك",
-      visitors: 3950,
-      guidanceSessions: 121,
-      workshops: 24,
-      jobOpportunities: 205,
+      visitors: 54015,
+      guidanceSessions: 40597,
+      workshops: 43,
+      jobOpportunities: 7421,
       sectors: ["السياحة", "الطاقة", "تقنية المعلومات", "الزراعة", "الضيافة"],
       venues: []
     },
     "northern-borders": {
       name: "الحدود الشمالية",
       title: "منطقة الحدود الشمالية",
-      visitors: 1340,
-      guidanceSessions: 47,
-      workshops: 9,
-      jobOpportunities: 58,
+      visitors: 21464,
+      guidanceSessions: 15353,
+      workshops: 25,
+      jobOpportunities: 5382,
       sectors: ["التعدين", "الصناعة", "النقل والخدمات اللوجستية", "التعليم", "التجارة"],
       venues: []
     }
@@ -1262,7 +1262,13 @@ window.LIQAAT_MAP = {"viewBox":[0,0,900.0,739.2],"regions":{"riyadh":{"iso":"SA-
     const sky = $("#panelSky");
     sky.innerHTML = r.headerImage ? `<img src="${escapeHtml(r.headerImage)}" alt="">` : "";
 
-    $$(".stat__value").forEach((el) => countTo(el, Number(r[el.dataset.key]) || 0));
+    $$(".stat__value").forEach((el) => {
+      const v = r[el.dataset.key];
+      if (typeof v === "number") return countTo(el, v);
+      const prev = state.countTimers.get(el);
+      if (prev) { cancelAnimationFrame(prev); state.countTimers.delete(el); }
+      el.textContent = v == null ? "-" : String(v);
+    });
 
     const sectors = $("#sectors");
     sectors.innerHTML = (r.sectors || [])
