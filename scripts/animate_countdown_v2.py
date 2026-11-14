@@ -67,6 +67,17 @@ B0 = cv2.GaussianBlur(B0, (0, 0), 8)
 E = Binp - B0
 E = np.sign(E) * np.maximum(np.abs(E) - 3.0, 0)
 E *= cv2.GaussianBlur(content.astype(np.float32), (0, 0), 10)[..., None]
+E_raw = E.copy()
+# nothing of the light layer survives where text sat (removes the ghost under text)
+E *= (1 - np.clip(cv2.GaussianBlur(cv2.dilate(white_d, np.ones((5, 5), np.uint8)).astype(np.float32), (0, 0), 2) * 1.3, 0, 1))[..., None]
+
+def shape_mask(box, thr, dil, src):
+    x0, y0, x1, y1 = box
+    m = np.zeros((h0, w0), np.uint8)
+    sub = np.abs(src[y0:y1, x0:x1]).sum(axis=2) > thr
+    m[y0:y1, x0:x1] = sub
+    m = cv2.dilate(m, np.ones((dil, dil), np.uint8))
+    return cv2.GaussianBlur(m.astype(np.float32), (0, 0), 3)
 
 def rect_mask(x0, y0, x1, y1, f=6):
     m = np.zeros((h0, w0), np.float32)
@@ -81,12 +92,9 @@ TEXT = {
     'line':  (245, 1305, 1350, 1475),
 }
 LIGHT = {
-    'puz':   (280, 685, 700, 1075),
-    'big':   (905, 1075, 1225, 1400),
-    'f1':    (185, 580, 275, 670),
-    'f2':    (475, 575, 545, 645),
-    'f3':    (725, 590, 785, 655),
+    'puz':   (280, 650, 700, 1075),
 }
+BIG_BOX = (905, 1075, 1225, 1400)
 TRI_BOX = (935, 435, 1165, 655)
 TRI_C = [(1003, 492), (1097, 490), (1095, 592)]
 
@@ -106,7 +114,10 @@ for n_, b in LIGHT.items():
     add('light', n_, b, E * m[..., None])
 # triangles: voronoi split
 x0, y0, x1, y1 = TRI_BOX
-tm = rect_mask(*TRI_BOX, f=5); used = np.maximum(used, tm)
+tm = shape_mask(TRI_BOX, 20, 27, E) * rect_mask(*TRI_BOX, f=3); used = np.maximum(used, tm)
+bm = shape_mask(BIG_BOX, 12, 9, np.clip(E_raw, 0, None)) * rect_mask(*BIG_BOX, f=3)
+used = np.maximum(used, bm)
+add('light', 'big', BIG_BOX, np.clip(E_raw, 0, None) * bm[..., None])
 yy, xx = np.mgrid[0:h0, 0:w0].astype(np.float32)
 d = np.stack([(xx - cx) ** 2 + (yy - cy) ** 2 for cx, cy in TRI_C])
 own = d.argmin(0)
@@ -126,9 +137,8 @@ K = 0.78
 SC = (797.0, 945.0)   # content centre in source
 CC = (540.0, 965.0)   # where it goes on canvas
 OFF = {'tri0': (10, -110), 'tri1': (10, -110), 'tri2': (10, -110),
-       'f1': (0, -70), 'f2': (0, -70), 'f3': (0, -60),
-       'tabqa': (0, -45), 'puz': (0, -10), 'num': (0, 10), 'ayam': (0, 10),
-       'big': (0, 50), 'line': (0, 85), 'rest': (0, -40)}
+       'tabqa': (0, -15), 'puz': (0, -15), 'num': (0, -15), 'ayam': (0, -15),
+       'big': (0, 50), 'line': (0, 85), 'rest': (0, -15)}
 
 def ease_out(x):
     x = min(max(x, 0.0), 1.0); return 1 - (1 - x) ** 3
@@ -177,15 +187,14 @@ def state(name, t):
                 (1 - p) * 90 + 20 * math.sin(2 * w + ph), 1, p * fade_out, 1)
     if name == 'puz':
         p = prog(t, 0.25, 1.15)
-        return (6 * math.sin(2 * w), 10 * math.sin(2 * w + 1) + up, 2.5 * math.sin(2 * w + 2),
-                0.85 + 0.15 * p, p * fade_out, 1 + 0.5 * (0.5 + 0.5 * math.sin(4 * w)))
+        return (0, up, 0, 1, p * fade_out, 1 + 0.5 * (0.5 + 0.5 * math.sin(4 * w)))
     if name == 'big':
         p = prog(t, 0.55, 1.5)
         return (12 * math.sin(2 * w + 2) + (1 - p) * 120, 14 * math.cos(2 * w) + up,
                 (1 - p) * -35 + 8 * math.sin(2 * w), 1.25 - 0.25 * p, p * fade_out, 1.3)
     if name == 'rest':
         p = prog(t, 0.0, 0.9)
-        return 18 * math.sin(w), 12 * math.sin(w + 1), 0, 1, p * fade_out, 1
+        return 0, up, 0, 1, p * fade_out, 1
     # text
     if name == 'tabqa':
         return 0, up, 0, 1, fade_out, ('wipe', prog(t, 0.35, 1.25))
