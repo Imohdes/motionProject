@@ -1,7 +1,7 @@
 import sys, os, math
 import numpy as np, cv2
 
-SRC, BG, OUT = sys.argv[1], sys.argv[2], sys.argv[3]
+SRC, BG, OUT, LOGO = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
 os.makedirs(OUT, exist_ok=True)
 W, H = 1080, 1920
 FPS, SECS = 20, 6
@@ -12,6 +12,23 @@ I = I8.astype(np.float32)
 h0, w0 = I.shape[:2]
 bg = cv2.imread(BG)[:, :, ::-1].astype(np.float32)
 bg = cv2.resize(bg, (W, H), interpolation=cv2.INTER_AREA)
+# remove old bottom-right logo from the background
+_m = (bg.min(axis=2) > 120).astype(np.uint8); _m[:1740] = 0; _m[:, :780] = 0; _m[1890:] = 0
+_m = cv2.dilate(_m, np.ones((11, 11), np.uint8))
+_b8 = np.clip(bg, 0, 255).astype(np.uint8)
+_sm = cv2.inpaint(cv2.resize(_b8, (W // 2, H // 2)), cv2.resize(_m, (W // 2, H // 2), interpolation=cv2.INTER_NEAREST), 12, cv2.INPAINT_TELEA)
+_sm = cv2.GaussianBlur(cv2.resize(_sm, (W, H), interpolation=cv2.INTER_CUBIC).astype(np.float32), (0, 0), 6)
+_mf = cv2.GaussianBlur(_m.astype(np.float32), (0, 0), 4)[..., None]
+bg = bg * (1 - _mf) + _sm * _mf
+# new logo strip, bottom-right (HRDF part keeps the old size/position)
+_lg = cv2.imread(LOGO, cv2.IMREAD_UNCHANGED)
+_la = _lg[..., 3].astype(np.float32) / 255
+_s = 222 / 105.0
+_lw, _lh = int(round(_lg.shape[1] * _s)), int(round(_lg.shape[0] * _s))
+_la = np.clip(cv2.resize(_la, (_lw, _lh), interpolation=cv2.INTER_LANCZOS4), 0, 1)
+LOGO_A = np.zeros((H, W), np.float32)
+_x1, _y1 = 1041, 1871
+LOGO_A[_y1 - _lh:_y1, _x1 - _lw:_x1] = _la
 
 # ---------------- extraction from the original design ----------------
 mn = I.min(axis=2)
@@ -209,5 +226,6 @@ for k in range(N):
             edge = xr - p * (xr - xl)          # right-to-left reveal (Arabic)
             a = a * np.clip((XX - edge) / 60.0, 0, 1)
         fr = fr * (1 - a[..., None]) + 255.0 * a[..., None]
+    fr = fr * (1 - LOGO_A[..., None]) + 255.0 * LOGO_A[..., None]
     cv2.imwrite(f'{OUT}/f{k:03d}.png', np.clip(fr, 0, 255).astype(np.uint8)[:, :, ::-1])
 print('done', N)
