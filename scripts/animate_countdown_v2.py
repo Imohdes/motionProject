@@ -21,14 +21,20 @@ _sm = cv2.GaussianBlur(cv2.resize(_sm, (W, H), interpolation=cv2.INTER_CUBIC).as
 _mf = cv2.GaussianBlur(_m.astype(np.float32), (0, 0), 4)[..., None]
 bg = bg * (1 - _mf) + _sm * _mf
 # new logo strip, bottom-right (HRDF part keeps the old size/position)
-_lg = cv2.imread(LOGO, cv2.IMREAD_UNCHANGED)
-_la = _lg[..., 3].astype(np.float32) / 255
-_s = 222 / 105.0
+from PIL import Image as _PI
+_lg = np.array(_PI.open(LOGO).convert('RGBA')).astype(np.float32)
+_al = _lg[..., 3] > 10
+_ys, _xs = np.nonzero(_al)
+_lg = _lg[_ys.min():_ys.max() + 1, _xs.min():_xs.max() + 1]
+_s = 222 / 247.0                      # HRDF part keeps the old logo's size
 _lw, _lh = int(round(_lg.shape[1] * _s)), int(round(_lg.shape[0] * _s))
-_la = np.clip(cv2.resize(_la, (_lw, _lh), interpolation=cv2.INTER_LANCZOS4), 0, 1)
-LOGO_A = np.zeros((H, W), np.float32)
+_pa = _lg[..., 3:] / 255
+_pm = np.concatenate([_lg[..., :3] * _pa, _pa], -1)       # premultiplied
+_pm = cv2.resize(_pm, (_lw, _lh), interpolation=cv2.INTER_AREA)
+LOGO_A = np.zeros((H, W), np.float32); LOGO_P = np.zeros((H, W, 3), np.float32)
 _x1, _y1 = 1041, 1871
-LOGO_A[_y1 - _lh:_y1, _x1 - _lw:_x1] = _la
+LOGO_A[_y1 - _lh:_y1, _x1 - _lw:_x1] = np.clip(_pm[..., 3], 0, 1)
+LOGO_P[_y1 - _lh:_y1, _x1 - _lw:_x1] = _pm[..., :3]
 
 # ---------------- extraction from the original design ----------------
 mn = I.min(axis=2)
@@ -226,6 +232,6 @@ for k in range(N):
             edge = xr - p * (xr - xl)          # right-to-left reveal (Arabic)
             a = a * np.clip((XX - edge) / 60.0, 0, 1)
         fr = fr * (1 - a[..., None]) + 255.0 * a[..., None]
-    fr = fr * (1 - LOGO_A[..., None]) + 255.0 * LOGO_A[..., None]
+    fr = fr * (1 - LOGO_A[..., None]) + LOGO_P
     cv2.imwrite(f'{OUT}/f{k:03d}.png', np.clip(fr, 0, 255).astype(np.uint8)[:, :, ::-1])
 print('done', N)
