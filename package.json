@@ -1,0 +1,27 @@
+{
+  "name": "qassim26-register-video",
+  "version": "1.0.0",
+  "description": "Motion video: registration steps for لقاءات القصيم 26",
+  "scripts": {
+    "assets": "python3 scripts/prep_assets.py",
+    "icons": "node scripts/build_icons.mjs",
+    "render:v": "node scripts/render.mjs v",
+    "render:h": "node scripts/render.mjs h",
+    "stills": "node scripts/stills.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Imohdes/motionProject.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Imohdes/motionProject/issues"
+  },
+  "homepage": "https://github.com/Imohdes/motionProject#readme",
+  "dependencies": {
+    "@fontsource/alexandria": "^5.3.0",
+    "@fontsource/ibm-plex-sans-arabic": "^5.3.0",
+    "lucide-static": "^1.78.0"
+  },
+  "private": true,
+  "type": "module"
+}
