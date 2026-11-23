@@ -15,9 +15,13 @@ BPM = 120
 BEAT = 60 / BPM
 rng = np.random.default_rng(3)
 
-cues = json.load(open(sys.argv[1]))
+_data = json.load(open(sys.argv[1]))
+cues, MK = (_data['cues'], _data['marks']) if isinstance(_data, dict) else (_data, {'steps': [3, 6, 9, 12, 15], 'sum': 18, 'end': 20, 'dur': 25})
 OUT = sys.argv[2]
-DUR = float(sys.argv[3]) if len(sys.argv) > 3 else 25.0
+DUR = float(sys.argv[3]) if len(sys.argv) > 3 else float(MK['dur'])
+ST, SUMT, ENDT = MK['steps'], MK['sum'], MK['end']
+G0 = ST[0]            # groove start
+FADE0 = DUR - 1.9     # music fade-out start
 N = int(SR * (DUR + 0.5))
 
 music = np.zeros((N, 2))
@@ -161,25 +165,26 @@ CH = {  # pad voicing, bass root
     'Am': ([57, 60, 64, 69], 45), 'F': ([57, 60, 65, 69], 41), 'C': ([55, 60, 64, 67], 48),
     'G': ([55, 59, 62, 67], 43), 'Cend': ([55, 60, 64, 67, 72], 36),
 }
-SECTIONS = [(0, 3, 'Am'), (3, 6, 'F'), (6, 9, 'C'), (9, 12, 'G'), (12, 15, 'Am'), (15, 18, 'F'), (18, 20, 'G'), (20, DUR, 'Cend')]
+_b = [0] + list(ST) + [SUMT, ENDT, DUR]
+SECTIONS = [(_b[i], _b[i + 1], n) for i, n in enumerate(['Am', 'F', 'C', 'G', 'Am', 'F', 'G', 'Cend'])]
 
 for a, b, name in SECTIONS:
     notes, root = CH[name]
     dur = (b - a) + 0.8
-    bright = 900 + 400 * (a / 3) if a < 3 else (2600 if name == 'Cend' else 1800)
+    bright = 1100 if a < G0 else (2600 if name == 'Cend' else 1800)
     for k, m in enumerate(notes):
         put(music, pad_note(m, dur, bright), a - 0.05, 0.10, pan=(k / (len(notes) - 1) - 0.5) * 0.8, send=0.5)
     # bass in 8ths (groove sections)
-    if 3 <= a < 20:
-        for i in range(int((b - a) / (BEAT / 2))):
+    if G0 <= a < ENDT:
+        for i in range(int(round((b - a) / (BEAT / 2)))):
             t0 = a + i * BEAT / 2
             put(music, bass_note(root, BEAT / 2 * 0.9), t0, 0.22 if i % 2 == 0 else 0.15)
     if name == 'Cend':
         put(music, bass_note(root, 4.5) * np.exp(-tt(int(4.5 * SR)) / 1.6), a, 0.32)
     # arpeggio 16ths
-    if 3 <= a < 20 or name == 'Cend':
+    if G0 <= a < ENDT or name == 'Cend':
         pat = [0, 1, 2, 3, 2, 1, 3, 2]
-        steps = int((min(b, 23.5) - a) / (BEAT / 4))
+        steps = int(round((min(b, FADE0) - a) / (BEAT / 4)))
         for i in range(steps):
             m = notes[pat[i % len(pat)] % len(notes)] + 12
             g = 0.075 * (1.0 if i % 4 == 0 else 0.7)
@@ -194,26 +199,27 @@ def beat_range(a, b, step):
         yield t
         t += step
 
-for t0 in beat_range(3, 19, BEAT):
-    bi = round((t0 - 3) / BEAT)
-    put(music, kick(), t0, 0.42)
-    if bi % 4 in (1, 3) and t0 < 18:
-        put(music, clap(), t0, 0.22, send=0.25)
-for t0 in beat_range(3 + BEAT / 2, 18, BEAT):
-    put(music, hat(), t0, 0.12, pan=0.25)
-for t0 in beat_range(3 + BEAT / 4, 18, BEAT / 2):
-    put(music, hat(), t0, 0.045, pan=-0.3)
-for t0 in beat_range(18 + BEAT / 2, 19, BEAT):
+for t0 in beat_range(G0, ENDT - 1, BEAT):
+    bi = round((t0 - G0) / BEAT)
+    put(music, kick(), t0, 0.40)
+    if bi % 4 in (1, 3) and t0 < SUMT:
+        put(music, clap(), t0, 0.20, send=0.25)
+for t0 in beat_range(G0 + BEAT / 2, SUMT, BEAT):
+    put(music, hat(), t0, 0.11, pan=0.25)
+for t0 in beat_range(G0 + BEAT / 4, SUMT, BEAT / 2):
+    put(music, hat(), t0, 0.04, pan=-0.3)
+for t0 in beat_range(SUMT + BEAT / 2, ENDT - 1, BEAT):
     put(music, hat(open_=True), t0, 0.08)
 # snare roll build into the end card
-roll = list(beat_range(19, 19.5, BEAT / 4)) + list(beat_range(19.5, 20, BEAT / 8))
+roll = list(beat_range(ENDT - 1, ENDT - 0.5, BEAT / 4)) + list(beat_range(ENDT - 0.5, ENDT, BEAT / 8))
 for k, t0 in enumerate(roll):
     put(music, clap(), t0, 0.06 + 0.22 * k / len(roll), send=0.2)
 # end groove (soft) + fade
-for t0 in beat_range(20 + BEAT * 2, 23.5, BEAT):
-    put(music, kick(), t0, 0.28 * (1 - (t0 - 21) / 3.5))
-for t0 in beat_range(20 + BEAT * 2.5, 23.5, BEAT):
-    put(music, hat(), t0, 0.08 * (1 - (t0 - 21) / 3.5), pan=0.25)
+_len = FADE0 - (ENDT + 1)
+for t0 in beat_range(ENDT + BEAT * 2, FADE0, BEAT):
+    put(music, kick(), t0, 0.28 * (1 - (t0 - ENDT - 1) / _len))
+for t0 in beat_range(ENDT + BEAT * 2.5, FADE0, BEAT):
+    put(music, hat(), t0, 0.08 * (1 - (t0 - ENDT - 1) / _len), pan=0.25)
 
 # ------------------------------------------------------------------ SFX
 def whoosh(dur=0.45, f0=500, f1=3500, g=1.0):
@@ -231,6 +237,18 @@ def sfx_for(c):
         n = int(0.5 * SR); t = tt(n)
         x = np.sin(2 * np.pi * 70 * t) * np.exp(-t / 0.12) + lp(rng.standard_normal(n), 900) * np.exp(-t / 0.03) * 0.5
         put(sfx, x, t0, 0.45 * v, send=0.4)
+    elif k == 'notif':
+        for i, m in enumerate([88, 95]):
+            put(sfx, bell(mtof(m), 0.9, 0.22), t0 + i * 0.11, 0.16 * v, pan=0.1, send=0.4)
+    elif k == 'open':
+        put(sfx, whoosh(0.45, 300, 2400), t0, 0.28 * v, send=0.2)
+    elif k == 'kb':
+        put(sfx, whoosh(0.28, 1800, 600), t0, 0.16 * v)
+    elif k == 'scroll':
+        put(sfx, whoosh(0.5, 900, 300), t0, 0.14 * v)
+    elif k == 'toast':
+        put(sfx, bell(mtof(91), 0.6, 0.15), t0, 0.12 * v, send=0.4)
+        put(sfx, bell(mtof(96), 0.6, 0.15), t0 + 0.08, 0.10 * v, send=0.4)
     elif k == 'rise':
         put(sfx, whoosh(0.9, 200, 2200), t0, 0.35 * v, send=0.3)
     elif k == 'whoosh':
@@ -312,11 +330,11 @@ mix = hp(mix, 28)
 # fade in/out
 fi = int(0.05 * SR)
 mix[:fi] *= np.linspace(0, 1, fi)[:, None]
-fo0, fo1 = int(23.6 * SR), int(DUR * SR)
+fo0, fo1 = int(FADE0 * SR), int(DUR * SR)
 mix[fo0:fo1] *= np.linspace(1, 0, fo1 - fo0)[:, None] ** 1.5
 mix[fo1:] = 0
 # normalise (RMS target) + soft limit
-rms = np.sqrt(np.mean(mix[: int(23 * SR)] ** 2))
+rms = np.sqrt(np.mean(mix[: int((DUR - 2.5) * SR)] ** 2))
 mix *= 0.16 / max(rms, 1e-9)
 mix = np.tanh(mix * 1.1) / np.tanh(1.1)
 mix *= 0.89 / max(1e-9, np.abs(mix).max())

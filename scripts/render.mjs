@@ -14,13 +14,14 @@ const fmt = args.find(a => a === 'v' || a === 'h') || 'v';
 const opt = (k, d) => { const i = args.indexOf('--' + k); return i >= 0 ? args[i + 1] : d; };
 const WORKERS = +opt('workers', 3);
 const URLP = opt('url', '');
+const DOMAIN = opt('domain', '');
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const OUT = `${ROOT}out`;
 const TMP = `${OUT}/tmp_${fmt}`;
 mkdirSync(TMP, { recursive: true });
 
 const { srv, url } = await serve();
-const pageUrl = `${url}/src/index.html?fmt=${fmt}${URLP ? '&url=' + encodeURIComponent(URLP) : ''}`;
+const pageUrl = `${url}/src/index.html?fmt=${fmt}${URLP ? '&url=' + encodeURIComponent(URLP) : ''}${DOMAIN ? '&domain=' + encodeURIComponent(DOMAIN) : ''}`;
 const browser = await chromium.launch({ args: ['--force-color-profile=srgb'] });
 
 async function openPage() {
@@ -36,7 +37,7 @@ const probe = await openPage();
 const COMP = await probe.evaluate(() => ({ ...window.COMP }));
 await probe.close();
 console.log(`rendering ${fmt} ${COMP.W}x${COMP.H} ${COMP.frames} frames @${COMP.FPS}fps with ${WORKERS} workers`);
-writeFileSync(`${TMP}/cues.json`, JSON.stringify(COMP.CUES));
+writeFileSync(`${TMP}/cues.json`, JSON.stringify({ cues: COMP.CUES, marks: COMP.MARKS }));
 
 const t0 = Date.now();
 const per = Math.ceil(COMP.frames / WORKERS);
@@ -47,7 +48,7 @@ async function worker(k) {
   const page = await openPage();
   const seg = `${TMP}/seg_${k}.mp4`;
   const ff = spawn('ffmpeg', ['-v', 'error', '-y', '-f', 'image2pipe', '-framerate', String(COMP.FPS), '-c:v', 'png', '-i', '-',
-    '-c:v', 'libx264', '-preset', 'medium', '-crf', '15', '-pix_fmt', 'yuv420p', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709', '-threads', '1', seg],
+    '-c:v', 'libx264', '-preset', 'slow', '-crf', '18', '-tune', 'animation', '-pix_fmt', 'yuv420p', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709', '-threads', '1', seg],
     { stdio: ['pipe', 'inherit', 'inherit'] });
   const finished = new Promise((res, rej) => ff.on('close', c => (c === 0 ? res() : rej(new Error('ffmpeg ' + c)))));
   for (let f = a; f < b; f++) {
