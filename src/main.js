@@ -216,7 +216,9 @@ const SIDE = {
 const ringArc = $('.arc', SIDE.ring), ringNum = $('.num', SIDE.ring);
 $$('.bc', stage).forEach(b => { b.style.transform = 'scale(0)'; });
 const PAPERS = [['صورة الهوية', -330, -300, -10, true], ['السيرة الذاتية', 330, -230, 9, false], ['نموذج الطلب', -335, 200, 7, false], ['الشهادات', 325, 260, -8, false]]
-  .map(([n, x, y, r, photo]) => ({ e: add(stage, `<div class="paper a"><div class="ph"></div><h5>${n}</h5>${photo ? '<div class="photo"></div><div style="height:58px"></div>' : ''}<i></i><i style="width:80%"></i><i></i><i style="width:60%"></i>${photo ? '' : '<i></i><i style="width:70%"></i>'}<div class="stamp"></div></div>`), x: SX(x), y, r }));
+  .map(([n, x, y, r, photo]) => ({ e: add(stage, `<div class="paper a"><div class="ph"></div><h5>${n}</h5>${photo ? '<div class="photo"></div><div style="height:58px"></div>' : ''}<i></i><i style="width:80%"></i><i></i><i style="width:60%"></i>${photo ? '' : '<i></i><i style="width:70%"></i>'}<div class="stamp"></div>
+    <svg class="x" viewBox="0 0 144 198"><path d="M16 18 L128 180" pathLength="1" stroke-dasharray="1"/><path d="M128 18 L16 180" pathLength="1" stroke-dasharray="1"/></svg></div>`), x: SX(x), y, r }));
+PAPERS.forEach(p => { p.xs = [...p.e.querySelectorAll('svg.x path')]; });
 
 // ---------- headlines
 const HEADS = [
@@ -415,13 +417,17 @@ function render(t) {
   side(SIDE.ring, SUM + 0.2, END + 0.6, -290, -110, 0.9, 180);
   side(SIDE.b6, SUM + 1.3, END + 0.6, 330, -260, 2.2, -120);
   { const rk = E.io3(P(t, SUM + 0.35, SUM + 1.25)); ringArc.style.strokeDashoffset = 1 - rk; ringNum.textContent = Math.round(rk * 100) + '%'; }
-  // papers: float around, then fly into the phone (no paper needed)
+  // papers: float around, get crossed out (X), then fly away — no papers needed
   PAPERS.forEach((p, j) => {
     const v = env(t, S[1] + 0.15 + j * 0.1, 99, 0.5);
-    const fly = E.i3(P(t, S[1] + 1.15 + j * 0.06, S[1] + 1.75 + j * 0.06));
-    const tx = 0, ty = 120;
-    T(p.e, { x: lerp(p.x + float(t, j, 6, 1.2), tx, fly), y: lerp(p.y + float(t, j + 2, 10, 1.0), ty, fly),
-      r: p.r * (1 - fly) + (1 - v.k) * 16, s: v.s * lerp(1, 0.12, fly), o: (fly >= 1 ? 0 : v.o) * (1 - E.i3(P(fly, 0.75, 1))) });
+    const xa = S[1] + 0.8 + j * 0.09;
+    p.xs.forEach((path, q) => { path.style.strokeDashoffset = 1 - E.o3(P(t, xa + q * 0.13, xa + q * 0.13 + 0.17)); });
+    const hp = P(t, xa + 0.13, xa + 0.45), hit = Math.sin(Math.PI * hp) * Math.exp(-hp * 2);
+    const fly = E.i3(P(t, S[1] + 1.45 + j * 0.06, S[1] + 2.05 + j * 0.06));
+    const dir = Math.atan2(p.y, p.x), fd = fly * 950;
+    T(p.e, { x: p.x + float(t, j, 6, 1.2) + Math.cos(dir) * fd, y: p.y + float(t, j + 2, 10, 1.0) + Math.sin(dir) * fd,
+      r: p.r + (1 - v.k) * 16 + hit * 6 * (j % 2 ? 1 : -1) + fly * (j % 2 ? 55 : -55), s: v.s * (1 + 0.06 * hit) * lerp(1, 0.8, fly),
+      o: (fly >= 1 ? 0 : v.o) * (1 - E.i3(P(fly, 0.55, 1))), b: fly * 5 });
   });
 
   // ----- headlines
@@ -484,7 +490,8 @@ function buildCues() {
   SCROLLS.slice(2).forEach(([a]) => cue(a, 'scroll', 0.5));
   [S[0] + 0.3, S[2] + 0.5, S[2] + 1.25, S[3] + 0.4, S[3] + 0.7, S[4] + 0.4, S[4] + 0.7, SUM + 0.2, SUM + 1.3].forEach(a => cue(a, 'pop', 0.7));
   PAPERS.forEach((_, j) => cue(S[1] + 0.15 + j * 0.1, 'paper', 0.7));
-  cue(S[1] + 1.15, 'swoosh'); cue(S[1] + 1.8, 'sparkle', 0.7);
+  PAPERS.forEach((_, j) => cue(S[1] + 0.8 + j * 0.09, 'scratch', 0.55));
+  cue(S[1] + 1.45, 'swoosh'); cue(S[1] + 1.8, 'sparkle', 0.7);
   PINS.forEach((_, j) => cue(S[3] + 0.75 + j * 0.2 + 0.2, 'drop', 0.9));
   cue(S[4] + 1.25, 'toast', 0.8); cue(SUM + 0.05, 'swoosh', 0.5);
   [0, 1, 2, 3, 4].forEach(j => cue(SUM + 0.55 + j * 0.125, 'blip', 0.8 + j * 0.05));

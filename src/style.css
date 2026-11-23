@@ -207,6 +207,8 @@ svg{display:block}
 .paper i{display:block;height:6px;border-radius:3px;background:#D9DFE5;margin-bottom:8px}
 .paper .photo{position:absolute;left:14px;top:46px;width:44px;height:54px;border-radius:3px;background:#E3E8ED}
 .paper .stamp{position:absolute;left:16px;bottom:16px;width:46px;height:46px;border-radius:50%;border:2.5px solid rgba(0,86,136,.45)}
+.paper svg.x{position:absolute;left:12px;top:12px;width:144px;height:198px;overflow:visible;filter:drop-shadow(0 2px 3px rgba(0,0,0,.25))}
+.paper svg.x path{fill:none;stroke:#DC7B2C;stroke-width:13;stroke-linecap:round}
 
 /* ================= headline ================= */
 .head{display:flex;flex-direction:column;gap:22px}
