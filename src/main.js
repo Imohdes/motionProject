@@ -77,12 +77,8 @@ root.style.width = W + 'px'; root.style.height = H + 'px';
 
 // ---------- background: Liqaa campaign gradient + soft light + brand shapes + film grain
 const bg = add(root, `<div style="position:absolute;inset:0"></div>`);
-add(bg, `<div id="bgbase"></div>`);
-const BLOBS = (V ? [
-  [880, 1060, 760, 'rgba(1,170,107,.55)'], [90, 1640, 900, 'rgba(220,123,44,.50)'], [540, -120, 1000, 'rgba(255,255,255,.16)'], [980, 260, 700, 'rgba(0,40,90,.45)'], [120, 820, 600, 'rgba(0,86,136,.45)'],
-] : [
-  [1500, 760, 900, 'rgba(1,170,107,.50)'], [60, 1000, 900, 'rgba(220,123,44,.55)'], [960, -200, 1200, 'rgba(255,255,255,.14)'], [1750, 150, 800, 'rgba(0,40,90,.40)'], [420, 420, 700, 'rgba(0,86,136,.45)'],
-]).map(([x, y, s, c], i) => { const e = add(bg, `<div class="blob a"></div>`); e.style.width = e.style.height = s + 'px'; e.style.background = c; place(e, x, y); return { e, ph: i * 1.7 }; });
+const bgbase = add(bg, `<div id="bgbase"></div>`);
+const BLOBS = [];
 const STREAKS = (V ? [[180, 260, 760, 0], [860, 520, 520, 1], [300, 1380, 640, 2]] : [[300, 160, 900, 0], [1500, 260, 600, 1], [700, 900, 700, 2]])
   .map(([x, y, w, i]) => { const e = add(bg, `<div class="streak a"></div>`); e.style.width = w + 'px'; place(e, x, y); return { e, ph: i * 2.1, w }; });
 const SHAPE_SVG = {
@@ -248,7 +244,7 @@ const sdots = [1, 2, 3, 4, 5].map((n, i) => { const e = add(stl, `<div class="sd
 const endcard = add(root, `<div id="endcard"><div id="endbg"></div></div>`);
 const hero = add(endcard, `<img id="hero" class="a" src="${IMG}hero.png">`);
 const tagline = add(endcard, `<img id="tagline" class="a" src="${IMG}tagline.png">`);
-const cta = add(endcard, `<div id="cta" class="a"><span>سجّل الآن</span><span class="arr">${ic('arrow-left')}</span></div>`);
+const cta = add(endcard, `<div id="cta" class="a">سجّل الآن</div>`);
 const ctasub = add(endcard, `<div id="ctasub" class="a">${CONFIG.url || 'التسجيل إلكتروني • بدون أوراق'}</div>`);
 if (CONFIG.url) ctasub.style.direction = 'ltr';
 const endbg = $('#endbg', endcard);
@@ -256,8 +252,8 @@ if (V) {
   hero.style.width = '1180px'; place(hero, 540, 965); tagline.style.width = '560px'; place(tagline, 540, 395);
   place(cta, 540, 1430); place(ctasub, 540, 1535);
 } else {
-  hero.style.width = '1060px'; place(hero, 560, 590); tagline.style.width = '450px'; place(tagline, 1340, 395);
-  place(cta, 1340, 680); place(ctasub, 1340, 775);
+  hero.style.width = '1060px'; place(hero, 560, 590); tagline.style.width = '450px'; place(tagline, 1340, 420);
+  place(cta, 1340, 740); place(ctasub, 1340, 835);
 }
 const vignette = add(root, `<div id="vignette"></div>`);
 
@@ -308,7 +304,7 @@ function scrollAt(t) {
 // ================================================================== RENDER
 function render(t) {
   // ----- background motion
-  BLOBS.forEach((b, i) => T(b.e, { x: float(t, b.ph, 40, 0.25), y: float(t, b.ph + 1, 30, 0.2), s: 1 + 0.05 * Math.sin(t * 0.3 + i) }));
+  bgbase.style.transform = `scale(${(1.04 + 0.025 * Math.sin(t * 0.22)).toFixed(4)}) translate(${(Math.sin(t * 0.17) * 8).toFixed(2)}px,${(Math.cos(t * 0.13) * 10).toFixed(2)}px)`;
   STREAKS.forEach((s, i) => { const k = ((t * 0.08 + s.ph * 0.1) % 1);
     T(s.e, { x: lerp(-260, 260, k) * 0.7, y: lerp(260, -260, k) * 0.7, r: -48, o: 0.35 * Math.sin(Math.PI * k) * E.o3(P(t, 0.4, 1.5)) }); });
   shapes.forEach(s => { const k = E.o3(P(t, 0.8 + s.d, 1.8 + s.d));
@@ -451,9 +447,8 @@ function render(t) {
     const tk = E.o3(P(t, END + 0.45, END + 1.35));
     T(tagline, { o: tk, y: (1 - tk) * 34, s: lerp(1.06, 1, tk), b: (1 - tk) * 12 });
     const ck = P(t, END + 1.15, END + 1.7), pulse = t > END + 2.1 ? Math.max(0, Math.sin((t - END - 2.1) * 3.2)) : 0;
-    T(cta, { o: E.o3(Math.min(1, ck * 2)), s: lerp(0.6, 1, E.back(ck)) * (1 + 0.025 * pulse) });
-    cta.style.boxShadow = `0 22px 44px rgba(0,50,40,.30),0 0 ${18 + 28 * pulse}px rgba(1,170,107,${0.35 + 0.3 * pulse})`;
-    $('.arr .ic', cta).style.transform = `translateX(${-6 * Math.max(0, Math.sin((t - END) * 6.4))}px)`;
+    T(cta, { o: E.o3(Math.min(1, ck * 2)), y: (1 - E.o3(ck)) * 40, s: lerp(0.9, 1, E.back(ck)) * (1 + 0.015 * pulse) });
+    cta.style.boxShadow = `0 18px 40px rgba(0,50,40,.28),0 0 ${16 + 24 * pulse}px rgba(1,170,107,${0.3 + 0.25 * pulse})`;
     const sk = E.o3(P(t, END + 1.5, END + 2.0)); T(ctasub, { o: sk, y: (1 - sk) * 20 });
   }
 }
