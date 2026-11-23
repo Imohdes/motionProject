@@ -21,12 +21,12 @@ const DONE = [6.5, 8.6, 11.5, 14.5, 17.5];  // tracker check moments
 // ------------------------------------------------------------------ layout per format
 const L = V ? {
   stage: { x: 540, y: 1062, s: 1.12 }, sideK: 1,
-  head: { x: 540, y: 318, w: 1000, fs: 92 },
-  tracker: { mode: 'row', y: 1730, gap: 200, d: 104 },
+  head: { x: 540, y: 372, w: 1000, fs: 92 },
+  steps: { x: 540, y: 182, gap: 100, d: 60, align: 'center' },
 } : {
-  stage: { x: 940, y: 560, s: 0.92 }, sideK: 0.94,
-  head: { x: 1525, y: 400, w: 660, fs: 78 },
-  tracker: { mode: 'col', x: 455, y0: 250, gap: 140, d: 88 },
+  stage: { x: 800, y: 560, s: 0.92 }, sideK: 0.94,
+  head: { x: 1455, y: 480, w: 700, fs: 80 },
+  steps: { x: 1805, y: 300, gap: 86, d: 52, align: 'right' },
 };
 
 // ------------------------------------------------------------------ utils
@@ -93,9 +93,9 @@ const SHAPE_SVG = {
 const shapes = [];
 {
   const spots = V ? [[100, 600, 72, 'cross', '#ffffff'], [980, 560, 54, 'tri', '#ffffff'], [70, 1200, 44, 'trif', '#DC7B2C'], [1010, 1330, 66, 'cross', '#7FE0B4'], [960, 870, 34, 'trif', '#ffffff'],
-      [140, 1490, 40, 'tri', '#7FE0B4'], [70, 900, 36, 'cross', '#DC7B2C'], [1015, 1080, 30, 'tri', '#DC7B2C'], [130, 380, 34, 'trif', '#7FE0B4'], [950, 120, 44, 'cross', '#ffffff']]
-    : [[640, 150, 62, 'cross', '#ffffff'], [1270, 900, 54, 'tri', '#ffffff'], [90, 960, 44, 'trif', '#DC7B2C'], [1840, 880, 62, 'cross', '#7FE0B4'], [1240, 150, 34, 'trif', '#ffffff'],
-      [640, 960, 40, 'tri', '#7FE0B4'], [700, 560, 34, 'cross', '#DC7B2C'], [1250, 640, 30, 'tri', '#DC7B2C'], [80, 120, 36, 'cross', '#7FE0B4'], [1860, 120, 40, 'trif', '#ffffff']];
+      [140, 1490, 40, 'tri', '#7FE0B4'], [70, 900, 36, 'cross', '#DC7B2C'], [1015, 1080, 30, 'tri', '#DC7B2C'], [130, 380, 34, 'trif', '#7FE0B4']]
+    : [[520, 190, 62, 'cross', '#ffffff'], [1170, 860, 54, 'tri', '#ffffff'], [330, 800, 44, 'trif', '#DC7B2C'], [1700, 800, 62, 'cross', '#7FE0B4'], [1150, 200, 34, 'trif', '#ffffff'],
+      [420, 520, 40, 'tri', '#7FE0B4'], [260, 330, 34, 'cross', '#DC7B2C'], [1120, 660, 30, 'tri', '#DC7B2C'], [1560, 200, 36, 'cross', '#7FE0B4']];
   const r = rng(23);
   spots.forEach(([x, y, sz, k, c], i) => {
     const e = add(bg, `<div class="shape a">${SHAPE_SVG[k](c)}</div>`);
@@ -232,44 +232,32 @@ const HEADS = [
 ];
 HEADS.forEach(h => {
   h.e = add(root, `<div class="head a" style="width:${L.head.w}px;text-align:${V ? 'center' : 'right'}">
-    ${h.chip ? `<div class="chip"><b>${h.chip}</b>الخطوة ${h.chip} من 5</div>` : ''}<div class="htxt" style="font-size:${L.head.fs}px">${h.html}</div></div>`);
+    <div class="htxt" style="font-size:${L.head.fs}px">${h.html}</div></div>`);
   place(h.e, L.head.x, L.head.y); h.chipE = $('.chip', h.e); h.em = $$('em', h.e);
 });
 
-// ---------- step tracker
-const TICONS = ['link', 'file-x-2', 'compass', 'store', 'graduation-cap'];
-const TLABELS = ['التسجيل', 'بدون أوراق', 'الإرشاد', 'المعارض', 'الدورات'];
-const TR = L.tracker;
-const tracker = add(root, `<div style="position:absolute;left:0;top:0;width:0;height:0"></div>`);
-const tline = add(tracker, TR.mode === 'row'
-  ? `<div class="tline" style="left:${W / 2 - TR.gap * 2}px;top:${TR.y - 2}px;width:${TR.gap * 4}px;height:4px"><i></i></div>`
-  : `<div class="tline" style="left:${TR.x - 2}px;top:${TR.y0}px;width:4px;height:${TR.gap * 4}px"><i></i></div>`);
-const tfill = tline.firstElementChild; tfill.style.transformOrigin = TR.mode === 'row' ? 'right center' : 'center top';
-const tnodes = TICONS.map((n, i) => {
-  const node = add(tracker, `<div class="tnode a" style="--d:${TR.d}px">${ic(n)}<div class="tc">${ic('check')}</div></div>`);
-  const lab = add(tracker, `<div class="tlabel a">${TLABELS[i]}</div>`);
-  const x = TR.mode === 'row' ? W / 2 + (2 - i) * TR.gap : TR.x, y = TR.mode === 'row' ? TR.y : TR.y0 + i * TR.gap;
-  place(node, x, y);
-  if (TR.mode === 'row') place(lab, x, y + TR.d / 2 + 30); else { place(lab, x - TR.d / 2 - 22, y); lab.style.fontSize = '29px'; }
-  return { node, lab, tc: $('.tc', node), icon: $('.ic', node) };
-});
+// ---------- numbered step timeline (numbers only)
+const SL = L.steps;
+const stl = add(root, `<div class="stl"></div>`);
+const sdx = i => (SL.align === 'center' ? SL.x + (2 - i) * SL.gap : SL.x - SL.d / 2 - i * SL.gap);
+const sline = add(stl, `<div class="sline" style="left:${sdx(4)}px;top:${SL.y - 1.5}px;width:${SL.gap * 4}px"><i></i></div>`);
+const sfill = sline.firstElementChild;
+const sdots = [1, 2, 3, 4, 5].map((n, i) => { const e = add(stl, `<div class="sdot a" style="--d:${SL.d}px"><span>${n}</span></div>`); place(e, sdx(i), SL.y); return e; });
 
 // ---------- end card
 const endcard = add(root, `<div id="endcard"><div id="endbg"></div></div>`);
 const hero = add(endcard, `<img id="hero" class="a" src="${IMG}hero.png">`);
 const tagline = add(endcard, `<img id="tagline" class="a" src="${IMG}tagline.png">`);
-const cta = add(endcard, `<div id="cta" class="a"><span>سجّل الحين</span><span class="arr">${ic('arrow-left')}</span></div>`);
+const cta = add(endcard, `<div id="cta" class="a"><span>سجّل الآن</span><span class="arr">${ic('arrow-left')}</span></div>`);
 const ctasub = add(endcard, `<div id="ctasub" class="a">${CONFIG.url || 'التسجيل إلكتروني • بدون أوراق'}</div>`);
 if (CONFIG.url) ctasub.style.direction = 'ltr';
-const logopanel = add(endcard, `<div id="logopanel" class="a"><img src="${IMG}logo_event.png"><div class="div"></div><img src="${IMG}logo_hrdf.png"></div>`);
-const [lgEvent, lgDiv, lgHrdf] = logopanel.children;
+const endbg = $('#endbg', endcard);
 if (V) {
-  hero.style.width = '1180px'; place(hero, 540, 960); tagline.style.width = '700px'; place(tagline, 540, 372);
-  place(cta, 540, 1412); place(ctasub, 540, 1512); lgEvent.style.height = '150px'; lgHrdf.style.height = '150px'; place(logopanel, 540, 1730);
+  hero.style.width = '1180px'; place(hero, 540, 965); tagline.style.width = '560px'; place(tagline, 540, 395);
+  place(cta, 540, 1430); place(ctasub, 540, 1535);
 } else {
-  hero.style.width = '1060px'; place(hero, 420, 640); tagline.style.width = '560px'; place(tagline, 1060, 380);
-  place(cta, 1060, 720); place(ctasub, 1060, 815);
-  logopanel.style.width = '440px'; logopanel.style.height = H + 'px'; lgEvent.style.width = '330px'; lgHrdf.style.width = '330px'; place(logopanel, W - 220, H / 2);
+  hero.style.width = '1060px'; place(hero, 560, 590); tagline.style.width = '450px'; place(tagline, 1340, 395);
+  place(cta, 1340, 680); place(ctasub, 1340, 775);
 }
 const vignette = add(root, `<div id="vignette"></div>`);
 
@@ -328,8 +316,9 @@ function render(t) {
 
   // ----- phone
   const ent = P(t, 0.1, 1.4);
-  const push = 1 + 0.015 * Math.sin(t * 0.5) + 0.04 * E.io3(P(t, END - 0.5, END + 0.5));
-  T(stage, { s: L.stage.s * push });
+  const push = 1 + 0.015 * Math.sin(t * 0.5);
+  const ex = E.io3(P(t, END - 0.4, END + 0.6));
+  T(stage, { s: L.stage.s * push * (1 - 0.1 * ex), y: 150 * ex, o: 1 - E.i2(ex), b: 10 * ex });
   const ry = lerp(-28, 0, E.o3(ent)) + Math.sin(t * 0.45) * 5, rx = lerp(10, 0, E.o3(ent)) + Math.sin(t * 0.35 + 1) * 2.5;
   T(phone, { y: lerp(260, 0, E.o5(ent)) + float(t, 0, 7, 0.9), o: E.o3(P(t, 0.1, 0.5)), ry, rx, r: Math.sin(t * 0.3) * 0.6 });
   reflect.style.backgroundPosition = '0 0';
@@ -434,45 +423,38 @@ function render(t) {
   HEADS.forEach(h => {
     const i0 = P(t, h.a, h.a + 0.55), u = P(t, h.b - 0.3, h.b);
     T(h.e, { o: E.o3(i0) * (1 - E.io3(u)), y: lerp(44, 0, E.o3(i0)) - 36 * E.io3(u), b: (1 - E.o3(i0)) * 14 + u * 10 });
-    if (h.chipE) h.chipE.style.transform = `scale(${lerp(0.6, 1, E.back(P(t, h.a - 0.05, h.a + 0.4)))})`;
     h.em.forEach(em => em.style.setProperty('--m', E.io3(P(t, h.a + 0.35, h.a + 0.8)).toFixed(3)));
   });
 
-  // ----- tracker
-  { const k = E.o3(P(t, 2.2, 2.9)); tracker.style.opacity = k; tracker.style.display = k > 0 ? '' : 'none'; tracker.style.transform = `translateY(${((1 - k) * 50).toFixed(1)}px)`;
+  // ----- numbered step timeline
+  { const k = E.o3(P(t, S[0] - 0.3, S[0] + 0.35)) * (1 - E.io3(P(t, END - 0.35, END + 0.35)));
+    stl.style.opacity = k; stl.style.display = k > 0 ? '' : 'none'; stl.style.transform = `translateY(${((1 - k) * -24).toFixed(1)}px)`;
     let prog = 0; DONE.slice(0, 4).forEach(d => { prog += E.io3(P(t, d - 0.1, d + 0.4)); });
-    tfill.style.transform = TR.mode === 'row' ? `scaleX(${prog / 4})` : `scaleY(${prog / 4})`;
-    tnodes.forEach((n, i) => {
+    sfill.style.transform = `scaleX(${(prog / 4).toFixed(4)})`;
+    sdots.forEach((e, i) => {
       const act = E.o3(P(t, S[i] - 0.1, S[i] + 0.25)) * (1 - E.o3(P(t, STEP_END[i] - 0.1, STEP_END[i] + 0.2)));
-      const done = P(t, DONE[i], DONE[i] + 0.35);
-      T(n.node, { s: 1 + 0.14 * act + 0.08 * Math.sin(Math.PI * done) });
-      n.node.style.background = act > 0.05 ? `rgba(255,255,255,${0.14 + 0.86 * act})` : '';
-      n.node.style.borderColor = act > 0.05 ? '#fff' : '';
-      n.node.style.color = act > 0.5 ? '#005688' : '#fff';
-      n.node.style.boxShadow = act > 0.05 ? `0 0 ${36 * act}px rgba(255,255,255,${0.5 * act})` : '';
-      n.tc.style.transform = `scale(${E.back(done)})`;
-      n.lab.style.color = done > 0.5 || act > 0.5 ? '#fff' : '';
-      n.lab.style.transform = TR.mode === 'row' ? 'translate(-50%,-50%)' : 'translate(-100%,-50%)';
+      const done = P(t, DONE[i], DONE[i] + 0.3);
+      T(e, { s: 1 + 0.22 * act + 0.1 * Math.sin(Math.PI * done) });
+      const st = done > 0.5 ? 'done' : act > 0.5 ? 'act' : '';
+      if (e.dataset.st !== st) { e.dataset.st = st; e.className = 'sdot a' + (st ? ' ' + st : ''); }
     });
   }
 
-  // ----- end card
-  { const k = E.io3(P(t, END, END + 0.85));
-    const cx = L.stage.x, cy = L.stage.y, R = Math.hypot(Math.max(cx, W - cx), Math.max(cy, H - cy));
+  // ----- end card (soft cross-fade, no hard wipe)
+  { const k = E.io3(P(t, END - 0.2, END + 0.9));
     endcard.style.display = k > 0 ? '' : 'none';
-    endcard.style.clipPath = `circle(${(k * R).toFixed(1)}px at ${cx}px ${cy}px)`;
+    endcard.style.opacity = k;
+    endbg.style.transform = `scale(${lerp(1.08, 1, k).toFixed(4)})`;
     vignette.style.opacity = 1 - 0.6 * k;
-    const hk = E.o3(P(t, END + 0.3, END + 1.5)); T(hero, { o: hk, s: lerp(1.12, 1, hk) * (1 + Math.max(0, t - END) * 0.006), y: (1 - hk) * 30 });
-    const tk = E.o3(P(t, END + 0.6, END + 1.5)); T(tagline, { o: Math.min(1, tk * 2), y: (1 - tk) * 24 });
-    tagline.style.clipPath = `inset(0 0 0 ${((1 - tk) * 100).toFixed(1)}%)`;
-    const ck = P(t, END + 1.3, END + 1.85), pulse = t > END + 2.2 ? Math.max(0, Math.sin((t - END - 2.2) * 3.2)) : 0;
-    T(cta, { o: E.o3(Math.min(1, ck * 2)), s: lerp(0.5, 1, E.back(ck)) * (1 + 0.025 * pulse) });
-    cta.style.boxShadow = `0 24px 50px rgba(0,40,70,.35),0 0 ${20 + 30 * pulse}px rgba(255,255,255,${0.25 + 0.25 * pulse})`;
+    const hk = E.o3(P(t, END + 0.1, END + 1.35));
+    T(hero, { o: hk, s: lerp(1.06, 1, hk) * (1 + Math.max(0, t - END) * 0.005), y: (1 - hk) * 90 });
+    const tk = E.o3(P(t, END + 0.45, END + 1.35));
+    T(tagline, { o: tk, y: (1 - tk) * 34, s: lerp(1.06, 1, tk), b: (1 - tk) * 12 });
+    const ck = P(t, END + 1.15, END + 1.7), pulse = t > END + 2.1 ? Math.max(0, Math.sin((t - END - 2.1) * 3.2)) : 0;
+    T(cta, { o: E.o3(Math.min(1, ck * 2)), s: lerp(0.6, 1, E.back(ck)) * (1 + 0.025 * pulse) });
+    cta.style.boxShadow = `0 22px 44px rgba(0,50,40,.30),0 0 ${18 + 28 * pulse}px rgba(1,170,107,${0.35 + 0.3 * pulse})`;
     $('.arr .ic', cta).style.transform = `translateX(${-6 * Math.max(0, Math.sin((t - END) * 6.4))}px)`;
-    const sk = E.o3(P(t, END + 1.65, END + 2.15)); T(ctasub, { o: sk, y: (1 - sk) * 20 });
-    const lk = E.o3(P(t, END + 1.8, END + 2.5));
-    if (V) T(logopanel, { o: lk, y: (1 - lk) * 80 }); else T(logopanel, { o: 1, x: (1 - lk) * 460 });
-    [lgEvent, lgDiv, lgHrdf].forEach((e, j) => { const q = E.o3(P(t, END + 2.1 + j * 0.15, END + 2.6 + j * 0.15)); e.style.opacity = q; e.style.transform = j === 1 ? `scale${V ? 'Y' : 'X'}(${q})` : `translateY(${(1 - q) * 16}px)`; });
+    const sk = E.o3(P(t, END + 1.5, END + 2.0)); T(ctasub, { o: sk, y: (1 - sk) * 20 });
   }
 }
 
@@ -496,8 +478,8 @@ function buildCues() {
   cue(S[4] + 1.25, 'toast', 0.8); cue(SUM + 0.05, 'swoosh', 0.5);
   [0, 1, 2, 3, 4].forEach(j => cue(SUM + 0.55 + j * 0.125, 'blip', 0.8 + j * 0.05));
   cue(SUM + 1.25, 'sparkle');
-  cue(END - 1.0, 'riser'); cue(END, 'impact');
-  cue(END + 1.3, 'pop', 0.9); cue(END + 1.9, 'whoosh', 0.6);
+  cue(END - 1.0, 'riser', 0.55); cue(END, 'impact', 0.45);
+  cue(END + 1.15, 'pop', 0.9); cue(END + 0.45, 'whoosh', 0.5);
 }
 
 // ---------- public API

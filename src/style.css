@@ -237,11 +237,11 @@ svg{display:block}
   linear-gradient(180deg,#005688 0%,#005688 22%,#05728A 36%,#0D9677 50%,#38B887 62%,#8ED3B4 76%,#E8C79A 100%)}
 .fmt-h #endbg{background:
   radial-gradient(45% 70% at 6% 85%,rgba(220,123,44,.85),transparent 70%),
-  linear-gradient(100deg,#005688 0%,#005688 30%,#0A7A8A 50%,#22A87C 64%,#5CC79A 76%,#9AD6BD 100%)}
+  linear-gradient(100deg,#005688 0%,#005688 28%,#0A7A8A 46%,#118F7C 60%,#1C9E7E 76%,#38B489 100%)}
 #hero{position:absolute;-webkit-mask-image:radial-gradient(closest-side,#000 62%,transparent 100%)}
 #tagline{position:absolute}
-#cta{display:flex;align-items:center;gap:22px;padding:20px 24px 20px 44px;border-radius:999px;background:#fff;color:var(--blue);font:700 54px/1 'SST Arabic';box-shadow:0 24px 50px rgba(0,40,70,.35)}
-#cta .arr{width:74px;height:74px;border-radius:50%;background:var(--orange);color:#fff;display:grid;place-items:center}
+#cta{display:flex;align-items:center;gap:22px;padding:22px 26px 22px 46px;border-radius:28px;background:var(--green);color:#fff;font:700 56px/1 'SST Arabic';box-shadow:0 22px 44px rgba(0,50,40,.30)}
+#cta .arr{width:72px;height:72px;border-radius:20px;background:#fff;color:var(--green);display:grid;place-items:center}
 #cta .arr .ic{width:38px;height:38px;stroke-width:2.6}
 #ctasub{font:700 30px/1.3 'SST Arabic';color:#fff;text-shadow:0 2px 14px rgba(0,40,70,.45);white-space:nowrap}
 #logopanel{background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 30px 60px rgba(0,30,60,.30)}
@@ -250,3 +250,13 @@ svg{display:block}
 #logopanel .div{background:var(--orange);border-radius:2px}
 .fmt-v #logopanel .div{width:4px;height:150px}
 .fmt-h #logopanel .div{height:4px;width:300px}
+
+/* numbered step timeline */
+.stl{position:absolute;left:0;top:0;width:0;height:0}
+.sline{position:absolute;height:3px;border-radius:2px;background:rgba(255,255,255,.30)}
+.sline i{position:absolute;inset:0;border-radius:2px;background:#fff;transform-origin:right center}
+.sdot{width:var(--d);height:var(--d);border-radius:50%;display:grid;place-items:center;color:#fff;
+  background:rgba(0,60,100,.35);border:2px solid rgba(255,255,255,.55);backdrop-filter:blur(8px);font:700 calc(var(--d) * .48)/1 'SST Arabic'}
+.sdot span{display:block;transform:translateY(.06em)}
+.sdot.act{background:var(--orange);border-color:#fff;box-shadow:0 0 0 5px rgba(255,255,255,.22),0 8px 22px rgba(0,30,60,.35)}
+.sdot.done{background:var(--green);border-color:var(--green)}
