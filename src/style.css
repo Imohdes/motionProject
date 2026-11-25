@@ -230,7 +230,7 @@ svg{display:block}
 #endbg{position:absolute;inset:0}
 .fmt-v #endbg{background:url('../assets/img/bg_v.webp') center/cover no-repeat}
 .fmt-h #endbg{background:url('../assets/img/bg_h.webp') center/cover no-repeat}
-#hero{position:absolute;-webkit-mask-image:radial-gradient(closest-side,#000 62%,transparent 100%)}
+#hero{position:absolute;-webkit-mask-image:radial-gradient(closest-side,#000 56%,rgba(0,0,0,.88) 68%,rgba(0,0,0,.45) 84%,transparent 100%)}
 #tagline{position:absolute}
 #cta{display:flex;align-items:center;justify-content:center;height:104px;border-radius:24px;background:var(--green);color:#fff;border:2px solid rgba(255,255,255,.35);font:700 54px/1 'SST Arabic';box-shadow:0 18px 40px rgba(0,50,40,.28)}
 .fmt-v #cta{width:720px}

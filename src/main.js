@@ -248,7 +248,7 @@ const ctasub = add(endcard, `<div id="ctasub" class="a">${CONFIG.url || 'الت�
 if (CONFIG.url) ctasub.style.direction = 'ltr';
 const endbg = $('#endbg', endcard);
 if (V) {
-  hero.style.width = '820px'; place(hero, 540, 940); tagline.style.width = '560px'; place(tagline, 540, 420);
+  hero.style.width = '1180px'; place(hero, 540, 965); tagline.style.width = '560px'; place(tagline, 540, 395);
   place(cta, 540, 1430); place(ctasub, 540, 1535);
 } else {
   hero.style.width = '1060px'; place(hero, 560, 590); tagline.style.width = '450px'; place(tagline, 1340, 420);
