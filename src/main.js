@@ -1,4 +1,4 @@
-/* لقاءات القصيم 26 — "جهّز نفسك قبل لا تجي"  (v2: realistic iPhone + brand colours + SST Arabic)
+/* لقاءات القصيم 26 — "خطوات تبدأ بلقاء"  (v3: voice-over script order, centred layout)
  * Deterministic motion-graphics composition: every frame is a pure function of time.
  * URL params: fmt=v (1080x1920, default) | fmt=h (1920x1080); t=<seconds> for a still; url=<link>; domain=<host>
  */
@@ -13,20 +13,21 @@ const CONFIG = { url: Q.get('url') || '', domain: Q.get('domain') || 'hrdf.org.s
 const IMG = '../assets/img/';
 
 // ------------------------------------------------------------------ timeline (120 BPM grid, beat = 0.5 s)
-const S = [3, 6.5, 9.5, 12.5, 15.5];        // step starts
-const SUM = 18.5, END = 20.5, DUR = 25.5;
-const STEP_END = [...S.slice(1), SUM];
-const DONE = [6.5, 8.6, 11.5, 14.5, 17.5];  // tracker check moments
+// scenes follow the voice-over: intro → programs → courses → exhibition → reminder → CV form → no paper → end
+const T_P = 3.5, T_C = 6.5, T_X = 9.5, T_R = 12.5, T_F = 15.0, T_N = 18.5, END = 21.5, DUR = 26.5;
+const STEPS = [T_P, T_C, T_X, T_F, T_N];                       // numbered 1..5
+const STEP_END = [T_C, T_X, T_R, T_N, END];
+const DONE = [T_P + 1.6, T_C + 1.1, T_X + 2.0, T_F + 3.35, T_N + 2.35];
 
 // ------------------------------------------------------------------ layout per format
 const L = V ? {
-  stage: { x: 540, y: 1062, s: 1.12 }, sideK: 1,
+  stage: { x: 540, y: 1062, s: 1.12 }, sideK: 1, shift: { phone: -196, col: 232 },
   head: { x: 540, y: 372, w: 1000, fs: 92 },
   steps: { x: 540, y: 182, gap: 100, d: 60, align: 'center' },
 } : {
-  stage: { x: 800, y: 560, s: 0.92 }, sideK: 0.94,
-  head: { x: 1455, y: 480, w: 700, fs: 80 },
-  steps: { x: 1805, y: 300, gap: 86, d: 52, align: 'right' },
+  stage: { x: 960, y: 640, s: 0.78 }, sideK: 0.94, shift: { phone: -300, col: 330 },
+  head: { x: 960, y: 175, w: 1500, fs: 64 },
+  steps: { x: 960, y: 58, gap: 80, d: 46, align: 'center' },
 };
 
 // ------------------------------------------------------------------ utils
@@ -127,42 +128,44 @@ const sbar = inScreen(`<div class="sbar"><span>9:41</span><span class="ind"><spa
 // lock screen
 const lock = inScreen(`<div class="lock">${ic('lock', 'ic lk')}<div class="day">لقاءات القصيم 26</div><div class="time">9:41</div>
   <img class="wlogo" src="${IMG}logo_event_dark.png">
-  <div class="notif"><div class="appic">${ic('link')}</div><div class="nb"><div class="nt">لقاءات القصيم 26<span>الآن</span></div><div class="nx">رابط التسجيل جاهز، سجّل حضورك قبل اللقاء</div></div></div>
+  <div class="notif"><div class="appic">${ic('link')}</div><div class="nb"><div class="nt">لقاءات القصيم 26<span>الآن</span></div><div class="nx">اكتشف وش ينتظرك في لقاء واحد</div></div></div>
   <div class="fl" style="left:46px">${ic('smartphone')}</div><div class="fl" style="right:46px">${ic('search')}</div></div>`);
 const notif = $('.notif', lock), lockTime = $('.time', lock), lockDay = $('.day', lock), wlogo = $('.wlogo', lock);
 
-// safari + website
-const PROGS = [['compass', 'الإرشاد المهني', 'اكتشف مسارك المهني', 't-blue'], ['briefcase', 'التوجيه الوظيفي', 'خطوتك الأولى لسوق العمل', 't-green'], ['trending-up', 'تطوير المسار المهني', 'طوّر مهاراتك وخططك', 't-orange'], ['users', 'لقاءات مع مختصين', 'استشارات وتوجيه', 't-blue']];
-const EXPOS = [['معرض التوظيف', 't-green'], ['معرض التدريب والتأهيل', 't-orange'], ['معرض ريادة الأعمال', 't-blue']];
+// safari + website (sections follow the voice-over order: programs → courses → exhibition → CV form)
+const PROGS = [['compass', 'الإرشاد المهني', 'حدّد مسارك المهني', 't-blue'], ['briefcase', 'التوجيه الوظيفي', 'خطوتك الأولى لسوق العمل', 't-green'], ['trending-up', 'تطوير المسار المهني', 'خطّط لمستقبلك', 't-orange'], ['users', 'لقاءات مع مختصين', 'استشارات وتوجيه', 't-blue']];
+const EXPOS = [['أجنحة التوظيف', 't-green'], ['التدريب والتأهيل', 't-orange'], ['ريادة الأعمال', 't-blue']];
 const COURSES = [['message-circle', 'مهارات التواصل', 't-blue'], ['presentation', 'التسويق الرقمي', 't-green'], ['clipboard-list', 'إدارة المشاريع', 't-orange']];
-const FIELDS = [['الاسم الكامل', 'عبدالله محمد', 'rtl', 'alpha'], ['رقم الهوية الوطنية', '10••••••••', 'ltr', 'num'], ['رقم الجوال', '05••••••••', 'ltr', 'num']];
+const FIELDS = [['الاسم الكامل', 'عبدالله محمد', 'rtl', 'alpha'], ['رقم الجوال', '05••••••••', 'ltr', 'num']];
 const BOOTHS = [[14, 14, 86, 56, 'c1'], [110, 14, 86, 56, ''], [206, 14, 70, 56, 'c3'], [286, 14, 58, 56, ''], [14, 84, 70, 86, ''], [94, 84, 110, 40, 'c2'], [94, 132, 110, 38, ''], [214, 84, 130, 86, 'c3']];
 const PINS = [[57, 42, '#01AA6B'], [149, 104, '#DC7B2C'], [279, 127, '#005688']];
 const safari = inScreen(`<div class="safari">
   <div class="page">
     <div class="site-hdr"><img src="${IMG}logo_event.png">${ic('menu')}</div>
     <img class="site-hero" src="${IMG}web_hero.jpg">
-    <div class="sec" id="sec-form"><div class="sec-t">التسجيل في لقاءات القصيم 26</div><div class="sec-s">سجّل بياناتك إلكترونياً قبل الحضور</div>
-      <div class="formbox"><div class="formin">
-        ${FIELDS.map(([l, , d]) => `<div class="fld"><label>${l}</label><div class="in"><span class="v" dir="${d}"></span><span class="caret"></span></div></div>`).join('')}
-        <div class="agree"><span class="cb">${ic('check')}</span>أوافق على الشروط والأحكام</div>
-        <div class="wbtn"><span class="bt">تسجيل</span><span class="spin a" style="left:50%;top:50%"></span></div>
-      </div>
-      <div class="okbox"><svg class="ck" viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="#E3F6EE" stroke="#01AA6B" stroke-width="5" stroke-linecap="round" pathLength="1" stroke-dasharray="1" transform="rotate(-90 50 50)"/><path d="M31 52 L44 64 L70 38" fill="none" stroke="#01AA6B" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1"/></svg>
-        <h4>تم تسجيلك بنجاح</h4><p>نشوفك في لقاءات القصيم 26</p>
-        <div class="nopaper"><div class="pi">${ic('file-x-2')}</div><div><b>ما يحتاج تقديم أوراق</b><span>تسجيلك محفوظ إلكترونياً، احضر بجوالك فقط</span></div></div></div>
-      </div></div>
-    <div class="sec" id="sec-prog"><div class="sec-t">برامج الإرشاد</div><div class="sec-s">تعرّف على البرامج المتاحة لك</div>
+    <div class="sec" id="sec-prog"><div class="sec-t">برامج إرشادية</div><div class="sec-s">لتحديد مسارك المهني</div>
       ${PROGS.map(([i, n, d, c]) => `<div class="wcard"><div class="wi ${c}">${ic(i)}</div><div class="wt">${n}<small>${d}</small></div>${ic('chevron-left', 'ic chev')}</div>`).join('')}</div>
-    <div class="sec" id="sec-expo"><div class="sec-t">المعارض المصاحبة</div><div class="sec-s">زُر المعارض على هامش اللقاء</div>
+    <div class="sec" id="sec-course"><div class="sec-t">الدورات</div><div class="sec-s">دورات تطوّر مهاراتك</div>
+      <div class="chips"><span class="on">الكل</span><span>مهارات</span><span>تقنية</span><span>إدارة</span></div>
+      ${COURSES.map(([i, n, c]) => `<div class="wcard"><div class="wi ${c}">${ic(i)}</div><div class="wt">${n}<small>دورة تدريبية</small></div><div class="rb"><span class="rbt">سجّل</span></div></div>`).join('')}</div>
+    <div class="sec" id="sec-expo"><div class="sec-t">المعرض المصاحب</div><div class="sec-s">يفتح لك آفاق جديدة</div>
       <div class="fmap">${BOOTHS.map(([x, y, w, h, c]) => `<div class="booth ${c}" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px"></div>`).join('')}
         <svg class="route" viewBox="0 0 357 190" style="position:absolute;inset:0;width:100%;height:100%"><path d="M178 176 L178 150 C178 128 60 140 57 100 L57 50" fill="none" stroke="#005688" stroke-width="3.5" stroke-dasharray="1 8" stroke-linecap="round"/></svg>
         ${PINS.map(([x, y, c]) => `<div class="pin a" style="left:${x}px;top:${y}px;transform:none"><svg viewBox="0 0 24 24"><path d="M12 22s7-6.5 7-12a7 7 0 1 0-14 0c0 5.5 7 12 7 12z" fill="${c}" stroke="#fff" stroke-width="1.6"/><circle cx="12" cy="10" r="2.6" fill="#fff"/></svg></div>`).join('')}
         <div class="me a" style="left:178px;top:176px"></div></div>
-      ${EXPOS.map(([n, c]) => `<div class="wcard"><div class="wi ${c}">${ic('map-pin')}</div><div class="wt">${n}<small>على هامش اللقاء</small></div>${ic('chevron-left', 'ic chev')}</div>`).join('')}</div>
-    <div class="sec" id="sec-course"><div class="sec-t">الدورات</div><div class="sec-s">سجّل في الدورة المناسبة لك</div>
-      <div class="chips"><span class="on">الكل</span><span>مهارات</span><span>تقنية</span><span>إدارة</span></div>
-      ${COURSES.map(([i, n, c]) => `<div class="wcard"><div class="wi ${c}">${ic(i)}</div><div class="wt">${n}<small>دورة تدريبية</small></div><div class="rb"><span class="rbt">سجّل</span></div></div>`).join('')}</div>
+      ${EXPOS.map(([n, c]) => `<div class="wcard"><div class="wi ${c}">${ic('map-pin')}</div><div class="wt">${n}<small>في المعرض المصاحب</small></div>${ic('chevron-left', 'ic chev')}</div>`).join('')}</div>
+    <div class="sec" id="sec-form"><div class="sec-t">سجّل سيرتك الذاتية</div><div class="sec-s">إلكترونياً قبل الحضور</div>
+      <div class="formbox"><div class="formin">
+        ${FIELDS.map(([l, , d]) => `<div class="fld"><label>${l}</label><div class="in"><span class="v" dir="${d}"></span><span class="caret"></span></div></div>`).join('')}
+        <div class="fld"><label>السيرة الذاتية</label><div class="up"><span class="upe">${ic('upload')}إرفاق السيرة الذاتية (PDF)</span>
+          <div class="file"><div class="fi">PDF</div><div class="fn">السيرة_الذاتية.pdf<div class="pb"><i></i></div></div><div class="fok">${ic('check')}</div></div></div></div>
+        <div class="agree"><span class="cb">${ic('check')}</span>أوافق على الشروط والأحكام</div>
+        <div class="wbtn"><span class="bt">تسجيل</span><span class="spin a" style="left:50%;top:50%"></span></div>
+      </div>
+      <div class="okbox"><svg class="ck" viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="#E3F6EE" stroke="#01AA6B" stroke-width="5" stroke-linecap="round" pathLength="1" stroke-dasharray="1" transform="rotate(-90 50 50)"/><path d="M31 52 L44 64 L70 38" fill="none" stroke="#01AA6B" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1"/></svg>
+        <h4>تم تسجيل سيرتك الذاتية</h4><p>نشوفك في لقاءات القصيم 26</p>
+        <div class="nopaper"><div class="pi">${ic('file-x-2')}</div><div><b>ما يحتاج تجيبها ورقياً</b><span>سيرتك محفوظة إلكترونياً</span></div></div></div>
+      </div></div>
     <div class="site-foot"><img src="${IMG}logo_hrdf.png"></div>
   </div>
   <div class="statusbg"></div>
@@ -181,61 +184,54 @@ const safari = inScreen(`<div class="safari">
       <div class="row"><div class="key blank"></div><div class="key" data-k="0">0</div><div class="key blank">${ic('delete')}</div></div>
     </div>
     <div class="bot">${ic('globe')}${ic('mic')}</div></div>
-  <div class="toast"><div class="ti">${ic('check')}</div><div>تم تسجيلك في الدورة<small>التسويق الرقمي</small></div></div>
-  <div class="sheet"><div class="grab"></div><h4>جاهزيتك للقاء</h4><p>كل الخطوات مكتملة</p>
-    ${['سجّلت إلكترونياً', 'بدون أوراق', 'تعرّفت على برامج الإرشاد', 'خطّطت لزيارة المعارض', 'سجّلت في الدورات'].map(s => `<div class="chk"><div class="ok">${ic('check')}</div>${s}</div>`).join('')}</div>
+  <div class="toast tc"><div class="ti">${ic('check')}</div><div>تم تسجيلك في الدورة<small>التسويق الرقمي</small></div></div>
+  <div class="toast rem"><div class="ti">${ic('bell-ring')}</div><div>تذكير<small>قبل تجينا، سجّل سيرتك الذاتية إلكترونياً</small></div></div>
 </div>`);
 const page = $('.page', safari), chrome = $('.chrome', safari), addrProg = $('.prog', safari), kb = $('.kb', safari);
-const kbAlpha = $('.alpha', kb), kbNum = $('.num', kb), toast = $('.toast', safari), sheet = $('.sheet', safari);
+const kbAlpha = $('.alpha', kb), kbNum = $('.num', kb), toast = $('.toast.tc', safari), remToast = $('.toast.rem', safari);
 const fldIns = $$('.fld .in', safari), fldVals = $$('.fld .v', safari), fldCarets = $$('.fld .caret', safari);
+const upBox = $('.up', safari), upEmpty = $('.upe', safari), upFile = $('.file', safari), upBar = $('.pb i', safari), upOk = $('.fok', safari);
 const formin = $('.formin', safari), okbox = $('.okbox', safari), wbtn = $('.wbtn', safari), btText = $('.bt', wbtn), spin = $('.spin', wbtn);
 const okCircle = $('.okbox circle', safari), okTick = $('.okbox path', safari), okCk = $('.okbox .ck', safari), nopaper = $('.nopaper', safari);
-const progCards = $$('#sec-prog .wcard', safari), courseCards = $$('#sec-course .wcard', safari), courseBtns = $$('#sec-course .rb', safari);
-const pins = $$('.pin', safari), meDot = $('.me', safari), route = $('.route', safari), sumChecks = $$('.chk', safari);
+const progCards = $$('#sec-prog .wcard', safari), courseBtns = $$('#sec-course .rb', safari);
+const pins = $$('.pin', safari), meDot = $('.me', safari), route = $('.route', safari);
 const keyOf = {}; $$('.key[data-k]', kb).forEach(k => { keyOf[k.dataset.k] = keyOf[k.dataset.k] || []; keyOf[k.dataset.k].push(k); });
 const touch = inScreen(`<div class="touch a"></div>`);
 
-// ---------- floating callouts around the phone (stage coords, phone = 437x893 centred)
-const SX = x => x * L.sideK;
-const bubble = (icon, color, check = false) => add(stage, `<div class="bubble a" style="color:${color}">${ic(icon)}${check ? `<div class="bc">${ic('check')}</div>` : ''}</div>`);
+// ---------- right-hand column (phone slides left, content appears on the right, then phone re-centres)
+const COL = L.shift.col;
+const card = (icon, tint, h, p, tag = '') => add(stage, `<div class="callout card a"><div class="ci ${tint}">${ic(icon)}</div><h4>${h}</h4><p>${p}</p>${tag}</div>`);
 const SIDE = {
-  b1: bubble('link', '#005688'),
-  b3: bubble('users', '#01AA6B'),
-  c3: add(stage, `<div class="callout card a"><div class="ci t-blue">${ic('compass')}</div><h4>الإرشاد المهني</h4><p>اكتشف مسارك المهني</p></div>`),
-  b4a: bubble('store', '#DC7B2C'), b4b: bubble('map-pin', '#005688', true),
-  b5a: bubble('graduation-cap', '#005688'), b5b: bubble('calendar-check', '#01AA6B'),
-  ring: add(stage, `<div class="callout ringcard a"><div class="ring"><svg viewBox="0 0 100 100"><defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#005688"/><stop offset="1" stop-color="#01AA6B"/></linearGradient></defs>
-      <circle cx="50" cy="50" r="42" fill="none" stroke="#E8EEF3" stroke-width="8"/><circle class="arc" cx="50" cy="50" r="42" fill="none" stroke="url(#rg)" stroke-width="8" stroke-linecap="round" pathLength="1" stroke-dasharray="1"/></svg>
-      <div class="num">0%</div></div><div class="lbl">جاهزيتك</div></div>`),
-  b6: bubble('award', '#DC7B2C'),
+  p: card('compass', 't-blue', 'برامج إرشادية', 'لتحديد مسارك'),
+  c: card('graduation-cap', 't-green', 'دورات', 'تطوّر مهاراتك', `<div class="tag">${ic('check')}تم التسجيل</div>`),
+  x: card('store', 't-orange', 'معرض مصاحب', 'يفتح لك آفاق جديدة'),
 };
-const ringArc = $('.arc', SIDE.ring), ringNum = $('.num', SIDE.ring);
-$$('.bc', stage).forEach(b => { b.style.transform = 'scale(0)'; });
-const PAPERS = [['صورة الهوية', -330, -300, -10, true], ['السيرة الذاتية', 330, -230, 9, false], ['نموذج الطلب', -335, 200, 7, false], ['الشهادات', 325, 260, -8, false]]
+// [start, end] of each "phone left / content right" moment
+const SHIFTS = { p: [T_P + 1.05, T_P + 2.55], c: [T_C + 1.2, T_C + 2.6], x: [T_X + 1.1, T_X + 2.55], n: [T_N + 0.1, T_N + 2.3] };
+const PAPERS = [['الشهادات', -45, -215, -10, false], ['صورة الهوية', 50, -20, 9, true], ['السيرة الذاتية', -14, 185, -4, false]]
   .map(([n, x, y, r, photo]) => ({ e: add(stage, `<div class="paper a"><div class="ph"></div><h5>${n}</h5>${photo ? '<div class="photo"></div><div style="height:58px"></div>' : ''}<i></i><i style="width:80%"></i><i></i><i style="width:60%"></i>${photo ? '' : '<i></i><i style="width:70%"></i>'}<div class="stamp"></div>
-    <svg class="x" viewBox="0 0 144 198"><path d="M16 18 L128 180" pathLength="1" stroke-dasharray="1"/><path d="M128 18 L16 180" pathLength="1" stroke-dasharray="1"/></svg></div>`), x: SX(x), y, r }));
+    <svg class="x" viewBox="0 0 144 198"><path d="M16 18 L128 180" pathLength="1" stroke-dasharray="1"/><path d="M128 18 L16 180" pathLength="1" stroke-dasharray="1"/></svg></div>`), x: COL + x, y, r }));
 PAPERS.forEach(p => { p.xs = [...p.e.querySelectorAll('svg.x path')]; });
 
-// ---------- headlines
+// ---------- headlines (exactly the voice-over lines, in order)
 const HEADS = [
-  { a: 0.7, b: S[0], chip: 0, html: '<small>ناوي تحضر</small><em>لقاءات القصيم؟</em>' },
-  { a: S[0], b: S[1], chip: 1, html: 'سجّل <em>إلكترونياً</em><br>من الرابط' },
-  { a: S[1], b: S[2], chip: 2, html: 'ما يحتاج<br><em>تقديم أوراق</em>' },
-  { a: S[2], b: S[3], chip: 3, html: 'تعرّف على<br><em>برامج الإرشاد</em>' },
-  { a: S[3], b: S[4], chip: 4, html: 'زُر <em>المعارض</em><br>المصاحبة' },
-  { a: S[4], b: SUM, chip: 5, html: 'سجّل في <em>الدورات</em><br>المناسبة لك' },
-  { a: SUM, b: END + 0.6, chip: 0, html: 'كل شي<br><em>جاهز!</em>' },
+  { a: 0.7, b: T_P, html: '<small>اكتشف</small>في لقاء واحد' },
+  { a: T_P, b: T_C, html: 'برامج إرشادية<br>لتحديد مسارك' },
+  { a: T_C, b: T_X, html: 'دورات تطوّر<br>مهاراتك' },
+  { a: T_X, b: T_R, html: 'معرض مصاحب<br>بآفاق جديدة' },
+  { a: T_R, b: T_F, html: 'قبل تجينا<br>تذكّر!' },
+  { a: T_F, b: T_N, html: 'سجّل سيرتك<br>إلكترونياً' },
+  { a: T_N, b: END + 0.6, html: 'ما يحتاج<br>تجيبها ورقياً' },
 ];
 HEADS.forEach(h => {
-  h.e = add(root, `<div class="head a" style="width:${L.head.w}px;text-align:${V ? 'center' : 'right'}">
-    <div class="htxt" style="font-size:${L.head.fs}px">${h.html}</div></div>`);
-  place(h.e, L.head.x, L.head.y); h.chipE = $('.chip', h.e); h.em = $$('em', h.e);
+  h.e = add(root, `<div class="head a" style="width:${L.head.w}px;text-align:center"><div class="htxt" style="font-size:${L.head.fs}px">${h.html}</div></div>`);
+  place(h.e, L.head.x, L.head.y);
 });
 
 // ---------- numbered step timeline (numbers only)
 const SL = L.steps;
 const stl = add(root, `<div class="stl"></div>`);
-const sdx = i => (SL.align === 'center' ? SL.x + (2 - i) * SL.gap : SL.x - SL.d / 2 - i * SL.gap);
+const sdx = i => SL.x + (2 - i) * SL.gap;
 const sline = add(stl, `<div class="sline" style="left:${sdx(4)}px;top:${SL.y - 1.5}px;width:${SL.gap * 4}px"><i></i></div>`);
 const sfill = sline.firstElementChild;
 const sdots = [1, 2, 3, 4, 5].map((n, i) => { const e = add(stl, `<div class="sdot a" style="--d:${SL.d}px"><span>${n}</span></div>`); place(e, sdx(i), SL.y); return e; });
@@ -261,16 +257,11 @@ const vignette = add(root, `<div id="vignette"></div>`);
 const M = {};
 function rel(el) { const a = el.getBoundingClientRect(), b = screen.getBoundingClientRect(); return { x: a.left - b.left + a.width / 2, y: a.top - b.top + a.height / 2, top: a.top - b.top, h: a.height }; }
 function measure() {
-  M.fields = fldIns.map(rel); M.btn = rel(wbtn); M.ok = rel(okbox); M.nop = rel(nopaper);
+  upFile.style.display = 'none';
+  M.fields = fldIns.map(rel); M.up = rel(upBox); M.btn = rel(wbtn); M.ok = rel(okbox);
   M.secProg = rel($('#sec-prog', safari)); M.secExpo = rel($('#sec-expo', safari)); M.secCourse = rel($('#sec-course', safari));
   M.prog0 = rel(progCards[0]); M.cbtn1 = rel(courseBtns[1]); M.pageH = page.getBoundingClientRect().height;
   M.accNext = rel($('.acc .arrows .ic:nth-child(2)', kb)); M.accDone = rel($('.acc b', kb)); M.notif = rel(notif);
-  const kbTop = rel(kb).top;
-  M.keyPos = {}; Object.entries(keyOf).forEach(([k, els]) => { M.keyPos[k] = els.map(rel); });
-  M.kbTop = kbTop;
-  kbNum.style.display = ''; kbAlpha.style.display = 'none';
-  Object.entries(keyOf).forEach(([k, els]) => { if (/[0-9]/.test(k)) M.keyPos[k] = els.map(rel); });
-  kbNum.style.display = 'none'; kbAlpha.style.display = '';
 }
 
 // ---------- scripted UI timeline (computed after measuring)
@@ -279,20 +270,21 @@ function script() {
   const sMax = M.pageH - (852 - 116);
   const at = (y, off) => clamp(y - off, 0, sMax);
   SCROLLS = [ // [start, end, target]
-    [3.5, 3.95, at(M.fields[0].top - 30, 134)],
-    [6.6, 7.1, at(M.ok.top, 130)],
-    [S[2] + 0.05, S[2] + 0.7, at(M.secProg.top, 64)],
-    [S[3] + 0.05, S[3] + 0.7, at(M.secExpo.top, 64)],
-    [S[4] + 0.05, S[4] + 0.7, at(M.secCourse.top, 64)],
+    [T_P + 0.05, T_P + 0.7, at(M.secProg.top, 64)],
+    [T_C + 0.05, T_C + 0.7, at(M.secCourse.top, 64)],
+    [T_X + 0.05, T_X + 0.7, at(M.secExpo.top, 64)],
+    [T_F + 0.05, T_F + 0.55, at(M.fields[0].top - 30, 134)],
+    [T_N + 0.05, T_N + 0.45, at(M.ok.top, 150)],
   ];
-  TYPE = [[3.9, 4.42], [4.62, 4.95], [5.12, 5.45]];   // per field typing windows
+  TYPE = [[T_F + 0.9, T_F + 1.4], [T_F + 1.6, T_F + 1.95]];
   TAPS = [
     { t: 2.55, p: () => M.notif },
-    { t: 3.45, p: () => M.fields[0], page: true },
-    { t: 4.52, p: () => M.accNext }, { t: 5.02, p: () => M.accNext }, { t: 5.55, p: () => M.accDone },
-    { t: 6.0, p: () => M.btn, page: true },
-    { t: S[2] + 1.1, p: () => M.prog0, page: true },
-    { t: S[4] + 1.1, p: () => M.cbtn1, page: true },
+    { t: T_P + 0.9, p: () => M.prog0, page: true },
+    { t: T_C + 0.95, p: () => M.cbtn1, page: true },
+    { t: T_F + 0.5, p: () => M.fields[0], page: true },
+    { t: T_F + 1.5, p: () => M.accNext }, { t: T_F + 2.05, p: () => M.accDone },
+    { t: T_F + 2.4, p: () => M.up, page: true },
+    { t: T_F + 2.95, p: () => M.btn, page: true },
   ];
 }
 function scrollAt(t) {
@@ -300,30 +292,32 @@ function scrollAt(t) {
   for (const [a, b, target] of SCROLLS) { if (t >= a) y = lerp(y, target, E.io3(P(t, a, b))); }
   return y;
 }
+const winK = (t, [a, b]) => E.io3(P(t, a, a + 0.45)) * (1 - E.io3(P(t, b, b + 0.45)));
 
 // ================================================================== RENDER
 function render(t) {
   // ----- background motion
   bgbase.style.transform = `scale(${(1.04 + 0.025 * Math.sin(t * 0.22)).toFixed(4)}) translate(${(Math.sin(t * 0.17) * 8).toFixed(2)}px,${(Math.cos(t * 0.13) * 10).toFixed(2)}px)`;
-  STREAKS.forEach((s, i) => { const k = ((t * 0.08 + s.ph * 0.1) % 1);
+  STREAKS.forEach(s => { const k = ((t * 0.08 + s.ph * 0.1) % 1);
     T(s.e, { x: lerp(-260, 260, k) * 0.7, y: lerp(260, -260, k) * 0.7, r: -48, o: 0.35 * Math.sin(Math.PI * k) * E.o3(P(t, 0.4, 1.5)) }); });
   shapes.forEach(s => { const k = E.o3(P(t, 0.8 + s.d, 1.8 + s.d));
     T(s.e, { y: float(t, s.ph, 14, 0.7) + (1 - k) * 30, r: s.r0 + t * s.rs, o: s.op * k }); });
 
-  // ----- phone
+  // ----- phone (slides left when content appears on the right, then re-centres)
   const ent = P(t, 0.1, 1.4);
-  const push = 1 + 0.015 * Math.sin(t * 0.5);
+  const shiftK = Math.max(...Object.values(SHIFTS).map(w => winK(t, w)));
+  const remK = winK(t, [T_R + 0.2, T_R + 2.2]);
+  const push = 1 + 0.015 * Math.sin(t * 0.5) + 0.04 * remK;
   const ex = E.io3(P(t, END - 0.4, END + 0.6));
   T(stage, { s: L.stage.s * push * (1 - 0.1 * ex), y: 150 * ex, o: 1 - E.i2(ex), b: 10 * ex });
-  const ry = lerp(-28, 0, E.o3(ent)) + Math.sin(t * 0.45) * 5, rx = lerp(10, 0, E.o3(ent)) + Math.sin(t * 0.35 + 1) * 2.5;
-  T(phone, { y: lerp(260, 0, E.o5(ent)) + float(t, 0, 7, 0.9), o: E.o3(P(t, 0.1, 0.5)), ry, rx, r: Math.sin(t * 0.3) * 0.6 });
-  reflect.style.backgroundPosition = '0 0';
+  const shake = Math.sin((t - T_R - 0.3) * 60) * 1.6 * (1 - P(t, T_R + 0.3, T_R + 0.75)) * (t > T_R + 0.3 ? 1 : 0);
+  const ry = lerp(-28, 0, E.o3(ent)) + Math.sin(t * 0.45) * 4 * (1 - shiftK) + 9 * shiftK, rx = lerp(10, 0, E.o3(ent)) + Math.sin(t * 0.35 + 1) * 2.5;
+  T(phone, { x: L.shift.phone * shiftK, y: lerp(260, 0, E.o5(ent)) + float(t, 0, 7, 0.9), o: E.o3(P(t, 0.1, 0.5)), ry, rx, r: Math.sin(t * 0.3) * 0.6 + shake });
   reflect.style.transform = `translateX(${(-ry * 4).toFixed(1)}px)`;
 
   // ----- lock screen → safari
   const openK = E.io3(P(t, 2.65, 3.1));
-  const lockOn = t < 3.15;
-  lock.style.display = lockOn ? '' : 'none';
+  lock.style.display = t < 3.15 ? '' : 'none';
   lock.style.transform = `scale(${1 + 0.08 * openK})`; lock.style.filter = openK > 0 ? `blur(${openK * 8}px)` : '';
   { const nk = P(t, 1.45, 1.95); notif.style.opacity = E.o3(Math.min(1, nk * 2));
     notif.style.transform = `translateY(${(1 - E.back(nk)) * 120}px) scale(${lerp(0.9, 1, E.o3(nk)) * (t > 2.55 && t < 2.68 ? 0.97 : 1)})`;
@@ -337,51 +331,56 @@ function render(t) {
   addrProg.style.width = (E.o3(P(t, 3.0, 3.45)) * 100) + '%'; addrProg.style.opacity = 1 - P(t, 3.45, 3.6);
 
   // ----- page scroll + keyboard
-  const scroll = scrollAt(t);
-  page.style.transform = `translateY(${(-scroll).toFixed(2)}px)`;
-  const kbUp = E.o3(P(t, 3.48, 3.78)) * (1 - E.io3(P(t, 5.6, 5.88)));
+  page.style.transform = `translateY(${(-scrollAt(t)).toFixed(2)}px)`;
+  const kbUp = E.o3(P(t, T_F + 0.52, T_F + 0.82)) * (1 - E.io3(P(t, T_F + 2.1, T_F + 2.38)));
   kb.style.transform = `translateY(${((1 - kbUp) * 340).toFixed(1)}px)`; kb.style.display = kbUp > 0.001 ? '' : 'none';
   chrome.style.transform = `translateY(${(kbUp * 120).toFixed(1)}px)`;
-  const numMode = t >= 4.55; kbAlpha.style.display = numMode ? 'none' : ''; kbNum.style.display = numMode ? '' : 'none';
+  const numMode = t >= T_F + 1.52; kbAlpha.style.display = numMode ? 'none' : ''; kbNum.style.display = numMode ? '' : 'none';
   $$('.key.on', kb).forEach(k => k.classList.remove('on'));
   FIELDS.forEach(([, val], i) => {
     const [a, b] = TYPE[i]; const chars = [...val]; const n = Math.round(P(t, a, b) * chars.length);
     fldVals[i].textContent = chars.slice(0, n).join('');
-    const focusA = i === 0 ? 3.45 : i === 1 ? 4.52 : 5.02, focusB = i === 0 ? 4.52 : i === 1 ? 5.02 : 5.55;
+    const focusA = i === 0 ? T_F + 0.5 : T_F + 1.52, focusB = i === 0 ? T_F + 1.52 : T_F + 2.05;
     const focus = t >= focusA && t < focusB;
     fldIns[i].classList.toggle('focus', focus);
     fldCarets[i].style.opacity = focus && (Math.floor(t * 3) % 2 === 0 || (t > a && t < b)) ? 1 : 0;
-    if (t > a && t < b + 0.06) { // key highlight for the char just typed
+    if (t > a && t < b + 0.06) {
       const idx = Math.min(chars.length - 1, Math.floor(P(t, a, b) * chars.length - 1e-6)); const ch = chars[idx] === '•' ? String((idx * 7) % 10) : chars[idx];
       (keyOf[ch] || []).forEach(k => k.classList.add('on'));
     }
   });
+  // CV upload
+  { const shown = t >= T_F + 2.45; upEmpty.style.display = shown ? 'none' : ''; upFile.style.display = shown ? '' : 'none';
+    upBox.classList.toggle('has', shown);
+    upBar.style.transform = `scaleX(${E.io3(P(t, T_F + 2.5, T_F + 2.8)).toFixed(3)})`;
+    upOk.style.transform = `scale(${E.back(P(t, T_F + 2.8, T_F + 3.0)).toFixed(3)})`; }
   // submit → spinner → success
-  { const pr = P(t, 6.0, 6.1), rl = P(t, 6.1, 6.22); wbtn.style.transform = `scale(${1 - 0.04 * E.o3(pr) + 0.04 * E.o3(rl)})`;
-    const sp = t >= 6.05 && t < 6.35; btText.style.opacity = sp ? 0 : 1; spin.style.display = sp ? '' : 'none';
+  { const s0 = T_F + 2.95, pr = P(t, s0, s0 + 0.1), rl = P(t, s0 + 0.1, s0 + 0.22); wbtn.style.transform = `scale(${1 - 0.04 * E.o3(pr) + 0.04 * E.o3(rl)})`;
+    const sp = t >= s0 + 0.05 && t < s0 + 0.32; btText.style.opacity = sp ? 0 : 1; spin.style.display = sp ? '' : 'none';
     spin.style.transform = `translate(-50%,-50%) rotate(${t * 720}deg)`;
-    const ok = E.o3(P(t, 6.3, 6.55)); formin.style.opacity = 1 - ok; okbox.style.opacity = ok; okbox.style.display = ok > 0 ? '' : 'none';
-    okCircle.style.strokeDashoffset = 1 - E.io3(P(t, 6.35, 6.8)); okTick.style.strokeDashoffset = 1 - E.o3(P(t, 6.6, 6.9));
-    okCk.style.transform = `scale(${lerp(0.6, 1, E.back(P(t, 6.3, 6.7)))})`;
-    const glow = Math.sin(Math.PI * P(t, 8.15, 8.75));
+    const ok = E.o3(P(t, s0 + 0.3, s0 + 0.55)); formin.style.opacity = 1 - ok; okbox.style.opacity = ok; okbox.style.display = ok > 0 ? '' : 'none';
+    okCircle.style.strokeDashoffset = 1 - E.io3(P(t, s0 + 0.35, s0 + 0.8)); okTick.style.strokeDashoffset = 1 - E.o3(P(t, s0 + 0.6, s0 + 0.9));
+    okCk.style.transform = `scale(${lerp(0.6, 1, E.back(P(t, s0 + 0.3, s0 + 0.7)))})`;
+    const glow = Math.sin(Math.PI * P(t, T_N + 1.7, T_N + 2.3));
     nopaper.style.transform = `scale(${1 + 0.05 * glow})`; nopaper.style.boxShadow = `0 0 0 ${6 * glow}px rgba(220,123,44,.22)`; }
   // programs
-  progCards.forEach((c, j) => c.classList.toggle('hl', j === 0 && t >= S[2] + 1.12));
-  // expo: pins drop + route
-  pins.forEach((p, j) => { const a = S[3] + 0.75 + j * 0.2; const kk = P(t, a, a + 0.45); p.style.opacity = kk > 0 ? 1 : 0;
+  progCards.forEach((c, j) => c.classList.toggle('hl', j === 0 && t >= T_P + 0.92));
+  // courses
+  courseBtns.forEach((b, j) => { const on = j === 1 && t >= T_C + 0.97; b.classList.toggle('on', on);
+    $('.rbt', b).innerHTML = on ? `${ic('check')}` : 'سجّل'; if (on) $('.rbt', b).insertAdjacentText('beforeend', 'تم التسجيل');
+    b.style.transform = `scale(${j === 1 && t > T_C + 0.95 && t < T_C + 1.05 ? 0.94 : 1})`; });
+  { const tk = E.back(P(t, T_C + 1.1, T_C + 1.45)), tu = E.io3(P(t, T_C + 2.3, T_C + 2.6));
+    toast.style.transform = `translateY(${((1 - tk) * -130 - tu * 130).toFixed(1)}px)`; toast.style.display = t > T_C + 1.1 && t < T_C + 2.65 ? '' : 'none'; }
+  // exhibition: pins drop + route
+  pins.forEach((p, j) => { const a = T_X + 0.75 + j * 0.2; const kk = P(t, a, a + 0.45); p.style.opacity = kk > 0 ? 1 : 0;
     p.style.transform = `translateY(${((1 - E.bounce(kk)) * -90).toFixed(1)}px)`; });
   { const pulse = (t * 1.1) % 1; meDot.style.boxShadow = `0 0 0 1px rgba(0,0,0,.1),0 0 0 ${4 + pulse * 14}px rgba(0,122,255,${0.3 * (1 - pulse)})`;
-    route.style.clipPath = `inset(${((1 - E.io3(P(t, S[3] + 1.4, S[3] + 2.0))) * 100).toFixed(1)}% 0 0 0)`; }
-  // courses
-  courseBtns.forEach((b, j) => { const on = j === 1 && t >= S[4] + 1.12; b.classList.toggle('on', on);
-    $('.rbt', b).innerHTML = on ? `${ic('check')}` : 'سجّل'; if (on) $('.rbt', b).insertAdjacentText('beforeend', 'تم التسجيل');
-    b.style.transform = `scale(${j === 1 && t > S[4] + 1.1 && t < S[4] + 1.2 ? 0.94 : 1})`; });
-  { const tk = E.back(P(t, S[4] + 1.25, S[4] + 1.6)), tu = E.io3(P(t, S[4] + 2.5, S[4] + 2.8));
-    toast.style.transform = `translateY(${((1 - tk) * -130 - tu * 130).toFixed(1)}px)`; toast.style.display = t > S[4] + 1.25 && t < S[4] + 2.85 ? '' : 'none'; }
-  // summary sheet
-  { const sk = E.o3(P(t, SUM + 0.05, SUM + 0.5)); sheet.style.transform = `translateY(${((1 - sk) * 580).toFixed(1)}px)`; sheet.style.display = sk > 0 ? '' : 'none';
-    sumChecks.forEach((c, j) => { const a = SUM + 0.55 + j * 0.125; c.classList.toggle('done', t >= a);
-      $('.ok', c).style.transform = `scale(${t >= a ? lerp(0.6, 1, E.back(P(t, a, a + 0.25))) : 1})`; }); }
+    route.style.clipPath = `inset(${((1 - E.io3(P(t, T_X + 1.3, T_X + 1.9))) * 100).toFixed(1)}% 0 0 0)`; }
+  // reminder notification
+  { const tk = E.back(P(t, T_R + 0.25, T_R + 0.6)), tu = E.io3(P(t, T_R + 2.15, T_R + 2.45));
+    remToast.style.transform = `translateY(${((1 - tk) * -140 - tu * 140).toFixed(1)}px)`; remToast.style.display = t > T_R + 0.25 && t < T_R + 2.5 ? '' : 'none';
+    const ring = Math.sin((t - T_R - 0.4) * 40) * 14 * (1 - P(t, T_R + 0.4, T_R + 1.1)) * (t > T_R + 0.4 ? 1 : 0);
+    $('.ti .ic', remToast).style.transform = `rotate(${ring.toFixed(1)}deg)`; }
 
   // ----- touch indicator (iOS "show touches")
   let tp = null; for (const tap of TAPS) if (t > tap.t - 0.1 && t < tap.t + 0.32) tp = tap;
@@ -389,29 +388,20 @@ function render(t) {
     T(touch, { x: p.x, y, s: lerp(1.15, 0.9, E.o3(P(t, tp.t - 0.1, tp.t + 0.05))) * (1 + 0.3 * P(t, tp.t + 0.12, tp.t + 0.32)), o: Math.min(1, k * 5) * (1 - E.i2(P(t, tp.t + 0.12, tp.t + 0.32))) });
   } else T(touch, { o: 0 });
 
-  // ----- side callouts
-  const side = (e, a, b, x, y, ph, dx = 0) => { const v = env(t, a, b); T(e, { x: SX(x) + dx * (1 - v.k), y: y + float(t, ph, 8, 1.1), s: v.s, o: v.o }); return v; };
-  side(SIDE.b1, S[0] + 0.3, S[1] + 0.05, -330, -300, 0.3, 120);
-  side(SIDE.b3, S[2] + 0.5, S[3] + 0.05, 330, -290, 0.7, -120);
-  side(SIDE.c3, S[2] + 1.25, S[3] + 0.05, -300, 170, 1.9, 220);
-  side(SIDE.b4a, S[3] + 0.4, S[4] + 0.05, 330, -280, 0.2, -120);
-  side(SIDE.b4b, S[3] + 0.7, S[4] + 0.05, -330, 230, 1.5, 120);
-  $('.bc', SIDE.b4b).style.transform = `scale(${E.back(P(t, DONE[3] - 0.15, DONE[3] + 0.15))})`;
-  side(SIDE.b5a, S[4] + 0.4, SUM + 0.05, -330, -290, 0.4, 120);
-  side(SIDE.b5b, S[4] + 0.7, SUM + 0.05, 330, 230, 2.4, -120);
-  side(SIDE.ring, SUM + 0.2, END + 0.6, -290, -110, 0.9, 180);
-  side(SIDE.b6, SUM + 1.3, END + 0.6, 330, -260, 2.2, -120);
-  { const rk = E.io3(P(t, SUM + 0.35, SUM + 1.25)); ringArc.style.strokeDashoffset = 1 - rk; ringNum.textContent = Math.round(rk * 100) + '%'; }
-  // papers: float around, get crossed out (X), then fly away — no papers needed
+  // ----- right-hand column content
+  [['p', SIDE.p], ['c', SIDE.c], ['x', SIDE.x]].forEach(([k, e], j) => {
+    const [a, b] = SHIFTS[k]; const v = env(t, a + 0.2, b + 0.15, 0.5, 0.35);
+    T(e, { x: COL - 110 * (1 - v.k) + 40 * E.io3(v.u), y: float(t, j, 7, 1.1), s: lerp(0.85, 1, v.k), o: v.o });
+  });
+  // papers: appear on the right, get an X, then fly away; phone returns to centre
   PAPERS.forEach((p, j) => {
-    const v = env(t, S[1] + 0.15 + j * 0.1, 99, 0.5);
-    const xa = S[1] + 0.8 + j * 0.09;
+    const v = env(t, T_N + 0.35 + j * 0.1, 99, 0.5);
+    const xa = T_N + 0.85 + j * 0.12;
     p.xs.forEach((path, q) => { path.style.strokeDashoffset = 1 - E.o3(P(t, xa + q * 0.13, xa + q * 0.13 + 0.17)); });
     const hp = P(t, xa + 0.13, xa + 0.45), hit = Math.sin(Math.PI * hp) * Math.exp(-hp * 2);
-    const fly = E.i3(P(t, S[1] + 1.45 + j * 0.06, S[1] + 2.05 + j * 0.06));
-    const dir = Math.atan2(p.y, p.x), fd = fly * 950;
-    T(p.e, { x: p.x + float(t, j, 6, 1.2) + Math.cos(dir) * fd, y: p.y + float(t, j + 2, 10, 1.0) + Math.sin(dir) * fd,
-      r: p.r + (1 - v.k) * 16 + hit * 6 * (j % 2 ? 1 : -1) + fly * (j % 2 ? 55 : -55), s: v.s * (1 + 0.06 * hit) * lerp(1, 0.8, fly),
+    const fly = E.i3(P(t, T_N + 1.6 + j * 0.07, T_N + 2.2 + j * 0.07));
+    T(p.e, { x: p.x + 120 * (1 - v.k) + fly * 820, y: p.y + float(t, j + 2, 8, 1.0) - fly * 120 * (j - 1),
+      r: p.r + (1 - v.k) * 14 + hit * 6 * (j % 2 ? 1 : -1) + fly * (j % 2 ? 50 : -40), s: 1.22 * v.s * (1 + 0.06 * hit),
       o: (fly >= 1 ? 0 : v.o) * (1 - E.i3(P(fly, 0.55, 1))), b: fly * 5 });
   });
 
@@ -419,16 +409,15 @@ function render(t) {
   HEADS.forEach(h => {
     const i0 = P(t, h.a, h.a + 0.55), u = P(t, h.b - 0.3, h.b);
     T(h.e, { o: E.o3(i0) * (1 - E.io3(u)), y: lerp(44, 0, E.o3(i0)) - 36 * E.io3(u), b: (1 - E.o3(i0)) * 14 + u * 10 });
-    h.em.forEach(em => em.style.setProperty('--m', E.io3(P(t, h.a + 0.35, h.a + 0.8)).toFixed(3)));
   });
 
   // ----- numbered step timeline
-  { const k = E.o3(P(t, S[0] - 0.3, S[0] + 0.35)) * (1 - E.io3(P(t, END - 0.35, END + 0.35)));
+  { const k = E.o3(P(t, T_P - 0.3, T_P + 0.35)) * (1 - E.io3(P(t, END - 0.35, END + 0.35)));
     stl.style.opacity = k; stl.style.display = k > 0 ? '' : 'none'; stl.style.transform = `translateY(${((1 - k) * -24).toFixed(1)}px)`;
     let prog = 0; DONE.slice(0, 4).forEach(d => { prog += E.io3(P(t, d - 0.1, d + 0.4)); });
     sfill.style.transform = `scaleX(${(prog / 4).toFixed(4)})`;
     sdots.forEach((e, i) => {
-      const act = E.o3(P(t, S[i] - 0.1, S[i] + 0.25)) * (1 - E.o3(P(t, STEP_END[i] - 0.1, STEP_END[i] + 0.2)));
+      const act = E.o3(P(t, STEPS[i] - 0.1, STEPS[i] + 0.25)) * (1 - E.o3(P(t, STEP_END[i] - 0.1, STEP_END[i] + 0.2)));
       const done = P(t, DONE[i], DONE[i] + 0.3);
       T(e, { s: 1 + 0.22 * act + 0.1 * Math.sin(Math.PI * done) });
       const st = done > 0.5 ? 'done' : act > 0.5 ? 'act' : '';
@@ -436,7 +425,7 @@ function render(t) {
     });
   }
 
-  // ----- end card (soft cross-fade, no hard wipe)
+  // ----- end card (soft cross-fade)
   { const k = E.io3(P(t, END - 0.2, END + 0.9));
     endcard.style.display = k > 0 ? '' : 'none';
     endcard.style.opacity = k;
@@ -460,25 +449,26 @@ function buildCues() {
   cue(1.5, 'notif');
   cue(2.7, 'open');
   TAPS.forEach(tp => cue(tp.t, 'tap'));
-  cue(3.5, 'kb', 0.6); cue(5.6, 'kb', 0.5);
+  SCROLLS.forEach(([a]) => cue(a, 'scroll', 0.5));
+  Object.values(SHIFTS).forEach(([a, b]) => { cue(a, 'kb', 0.45); cue(b, 'kb', 0.35); });
+  ['p', 'c', 'x'].forEach(k => cue(SHIFTS[k][0] + 0.2, 'pop', 0.75));
+  cue(T_C + 1.1, 'toast', 0.8);
+  PINS.forEach((_, j) => cue(T_X + 0.75 + j * 0.2 + 0.2, 'drop', 0.9));
+  cue(T_R + 0.25, 'notif');
+  cue(T_F + 0.52, 'kb', 0.6); cue(T_F + 2.1, 'kb', 0.5);
   FIELDS.forEach(([, v], i) => { const [a, b] = TYPE[i], n = [...v].length; for (let c = 0; c < n; c++) cue(a + (c / n) * (b - a), 'key', 0.6); });
-  cue(6.32, 'success');
+  cue(T_F + 2.82, 'pop', 0.6);
+  cue(T_F + 3.27, 'success');
   DONE.forEach(d => cue(d, 'check'));
-  SCROLLS.slice(2).forEach(([a]) => cue(a, 'scroll', 0.5));
-  [S[0] + 0.3, S[2] + 0.5, S[2] + 1.25, S[3] + 0.4, S[3] + 0.7, S[4] + 0.4, S[4] + 0.7, SUM + 0.2, SUM + 1.3].forEach(a => cue(a, 'pop', 0.7));
-  PAPERS.forEach((_, j) => cue(S[1] + 0.15 + j * 0.1, 'paper', 0.7));
-  PAPERS.forEach((_, j) => cue(S[1] + 0.8 + j * 0.09, 'scratch', 0.55));
-  cue(S[1] + 1.45, 'swoosh'); cue(S[1] + 1.8, 'sparkle', 0.7);
-  PINS.forEach((_, j) => cue(S[3] + 0.75 + j * 0.2 + 0.2, 'drop', 0.9));
-  cue(S[4] + 1.25, 'toast', 0.8); cue(SUM + 0.05, 'swoosh', 0.5);
-  [0, 1, 2, 3, 4].forEach(j => cue(SUM + 0.55 + j * 0.125, 'blip', 0.8 + j * 0.05));
-  cue(SUM + 1.25, 'sparkle');
+  PAPERS.forEach((_, j) => cue(T_N + 0.35 + j * 0.1, 'paper', 0.7));
+  PAPERS.forEach((_, j) => cue(T_N + 0.85 + j * 0.12, 'scratch', 0.55));
+  cue(T_N + 1.6, 'swoosh'); cue(T_N + 1.75, 'sparkle', 0.7);
   cue(END - 1.0, 'riser', 0.55); cue(END, 'impact', 0.45);
   cue(END + 1.15, 'pop', 0.9); cue(END + 0.45, 'whoosh', 0.5);
 }
 
 // ---------- public API
-window.COMP = { W, H, FPS, DUR, FMT, frames: Math.round(DUR * FPS), CUES, MARKS: { steps: S, sum: SUM, end: END, dur: DUR } };
+window.COMP = { W, H, FPS, DUR, FMT, frames: Math.round(DUR * FPS), CUES, MARKS: { steps: [T_P, T_C, T_X, T_R, T_F], sum: T_N, end: END, dur: DUR } };
 window.renderFrame = f => render(f / FPS);
 window.renderTime = t => render(t);
 window.compReady = (async () => {
