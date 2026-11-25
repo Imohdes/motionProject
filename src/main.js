@@ -21,11 +21,11 @@ const DONE = [T_P + 1.6, T_C + 1.1, T_X + 2.0, T_F + 3.35, T_N + 2.35];
 
 // ------------------------------------------------------------------ layout per format
 const L = V ? {
-  stage: { x: 540, y: 1062, s: 1.12 }, sideK: 1, shift: { phone: -196, col: 232 },
+  stage: { x: 540, y: 1062, s: 1.12 }, sideK: 1, shift: { phone: 172, col: 172, card: 165, shrink: 0.66 },
   head: { x: 540, y: 372, w: 1000, fs: 92 },
   steps: { x: 540, y: 182, gap: 100, d: 60, align: 'center' },
 } : {
-  stage: { x: 960, y: 640, s: 0.78 }, sideK: 0.94, shift: { phone: -300, col: 330 },
+  stage: { x: 960, y: 640, s: 0.78 }, sideK: 0.94, shift: { phone: 300, col: 330, card: 330, shrink: 0.8 },
   head: { x: 960, y: 175, w: 1500, fs: 64 },
   steps: { x: 960, y: 58, gap: 80, d: 46, align: 'center' },
 };
@@ -200,17 +200,20 @@ const touch = inScreen(`<div class="touch a"></div>`);
 
 // ---------- right-hand column (phone slides left, content appears on the right, then phone re-centres)
 const COL = L.shift.col;
-const card = (icon, tint, h, p, tag = '') => add(stage, `<div class="callout card a"><div class="ci ${tint}">${ic(icon)}</div><h4>${h}</h4><p>${p}</p>${tag}</div>`);
+const rowCard = (icon, tint, h, p) => add(stage, `<div class="callout rowc a"><div class="ci ${tint}">${ic(icon)}</div><div class="tx"><h4>${h}</h4><p>${p}</p></div></div>`);
 const SIDE = {
-  p: card('compass', 't-blue', 'برامج إرشادية', 'لتحديد مسارك'),
-  c: card('graduation-cap', 't-green', 'دورات', 'تطوّر مهاراتك', `<div class="tag">${ic('check')}تم التسجيل</div>`),
-  x: card('store', 't-orange', 'معرض مصاحب', 'يفتح لك آفاق جديدة'),
+  p: rowCard('compass', 't-blue', 'برامج إرشادية', 'لتحديد مسارك'),
+  c: rowCard('graduation-cap', 't-green', 'دورات', 'تطوّر مهاراتك'),
+  x: rowCard('store', 't-orange', 'معرض مصاحب', 'يفتح لك آفاق جديدة'),
 };
+const CARD_IN = { p: T_P + 1.15, c: T_C + 1.2, x: T_X + 1.2 };   // each card stays while the next one arrives
+const CARD_Y = { p: -152, c: 0, x: 152 };
 // [start, end] of each "phone left / content right" moment
-const SHIFTS = { p: [T_P + 1.05, T_P + 2.55], c: [T_C + 1.2, T_C + 2.6], x: [T_X + 1.1, T_X + 2.55], n: [T_N + 0.1, T_N + 2.3] };
+// phone windows: dir +1 = phone right (cards on the left), dir -1 = phone left (papers on the right)
+const SHIFTS = [{ w: [T_P + 0.95, T_R + 0.1], dir: 1 }, { w: [T_N + 0.1, T_N + 2.3], dir: -1 }];
 const PAPERS = [['الشهادات', -45, -215, -10, false], ['صورة الهوية', 50, -20, 9, true], ['السيرة الذاتية', -14, 185, -4, false]]
   .map(([n, x, y, r, photo]) => ({ e: add(stage, `<div class="paper a"><div class="ph"></div><h5>${n}</h5>${photo ? '<div class="photo"></div><div style="height:58px"></div>' : ''}<i></i><i style="width:80%"></i><i></i><i style="width:60%"></i>${photo ? '' : '<i></i><i style="width:70%"></i>'}<div class="stamp"></div>
-    <svg class="x" viewBox="0 0 144 198"><path d="M16 18 L128 180" pathLength="1" stroke-dasharray="1"/><path d="M128 18 L16 180" pathLength="1" stroke-dasharray="1"/></svg></div>`), x: COL + x, y, r }));
+    <svg class="x" viewBox="0 0 144 198"><path d="M16 18 L128 180" pathLength="1" stroke-dasharray="1"/><path d="M128 18 L16 180" pathLength="1" stroke-dasharray="1"/></svg></div>`), x: L.shift.col + x, y, r }));
 PAPERS.forEach(p => { p.xs = [...p.e.querySelectorAll('svg.x path')]; });
 
 // ---------- headlines (exactly the voice-over lines, in order)
@@ -245,7 +248,7 @@ const ctasub = add(endcard, `<div id="ctasub" class="a">${CONFIG.url || 'الت�
 if (CONFIG.url) ctasub.style.direction = 'ltr';
 const endbg = $('#endbg', endcard);
 if (V) {
-  hero.style.width = '1180px'; place(hero, 540, 965); tagline.style.width = '560px'; place(tagline, 540, 395);
+  hero.style.width = '820px'; place(hero, 540, 940); tagline.style.width = '560px'; place(tagline, 540, 420);
   place(cta, 540, 1430); place(ctasub, 540, 1535);
 } else {
   hero.style.width = '1060px'; place(hero, 560, 590); tagline.style.width = '450px'; place(tagline, 1340, 420);
@@ -305,14 +308,16 @@ function render(t) {
 
   // ----- phone (slides left when content appears on the right, then re-centres)
   const ent = P(t, 0.1, 1.4);
-  const shiftK = Math.max(...Object.values(SHIFTS).map(w => winK(t, w)));
+  let shiftK = 0, shiftX = 0;
+  SHIFTS.forEach(({ w, dir }) => { const k = winK(t, w); shiftK = Math.max(shiftK, k); shiftX += dir * L.shift.phone * k; });
+  const face = shiftX > 0 ? -1 : 1;
   const remK = winK(t, [T_R + 0.2, T_R + 2.2]);
   const push = 1 + 0.015 * Math.sin(t * 0.5) + 0.04 * remK;
   const ex = E.io3(P(t, END - 0.4, END + 0.6));
   T(stage, { s: L.stage.s * push * (1 - 0.1 * ex), y: 150 * ex, o: 1 - E.i2(ex), b: 10 * ex });
   const shake = Math.sin((t - T_R - 0.3) * 60) * 1.6 * (1 - P(t, T_R + 0.3, T_R + 0.75)) * (t > T_R + 0.3 ? 1 : 0);
-  const ry = lerp(-28, 0, E.o3(ent)) + Math.sin(t * 0.45) * 4 * (1 - shiftK) + 9 * shiftK, rx = lerp(10, 0, E.o3(ent)) + Math.sin(t * 0.35 + 1) * 2.5;
-  T(phone, { x: L.shift.phone * shiftK, y: lerp(260, 0, E.o5(ent)) + float(t, 0, 7, 0.9), o: E.o3(P(t, 0.1, 0.5)), ry, rx, r: Math.sin(t * 0.3) * 0.6 + shake });
+  const ry = lerp(-28, 0, E.o3(ent)) + Math.sin(t * 0.45) * 4 * (1 - shiftK) + 9 * face * shiftK, rx = lerp(10, 0, E.o3(ent)) + Math.sin(t * 0.35 + 1) * 2.5;
+  T(phone, { x: shiftX, s: lerp(1, L.shift.shrink, shiftK), y: lerp(260, 0, E.o5(ent)) + float(t, 0, 7, 0.9), o: E.o3(P(t, 0.1, 0.5)), ry, rx, r: Math.sin(t * 0.3) * 0.6 + shake });
   reflect.style.transform = `translateX(${(-ry * 4).toFixed(1)}px)`;
 
   // ----- lock screen → safari
@@ -388,10 +393,10 @@ function render(t) {
     T(touch, { x: p.x, y, s: lerp(1.15, 0.9, E.o3(P(t, tp.t - 0.1, tp.t + 0.05))) * (1 + 0.3 * P(t, tp.t + 0.12, tp.t + 0.32)), o: Math.min(1, k * 5) * (1 - E.i2(P(t, tp.t + 0.12, tp.t + 0.32))) });
   } else T(touch, { o: 0 });
 
-  // ----- right-hand column content
-  [['p', SIDE.p], ['c', SIDE.c], ['x', SIDE.x]].forEach(([k, e], j) => {
-    const [a, b] = SHIFTS[k]; const v = env(t, a + 0.2, b + 0.15, 0.5, 0.35);
-    T(e, { x: COL - 110 * (1 - v.k) + 40 * E.io3(v.u), y: float(t, j, 7, 1.1), s: lerp(0.85, 1, v.k), o: v.o });
+  // ----- step cards stack on the left (previous ones stay), all leave together before the reminder
+  ['p', 'c', 'x'].forEach((k, j) => {
+    const v = env(t, CARD_IN[k], T_R + 0.15 + j * 0.06, 0.5, 0.35);
+    T(SIDE[k], { x: -L.shift.card + 90 * (1 - v.k) - 40 * E.io3(v.u), y: CARD_Y[k] + float(t, j, 4, 1.1), s: lerp(0.85, 1, v.k), o: v.o });
   });
   // papers: appear on the right, get an X, then fly away; phone returns to centre
   PAPERS.forEach((p, j) => {
@@ -401,7 +406,7 @@ function render(t) {
     const hp = P(t, xa + 0.13, xa + 0.45), hit = Math.sin(Math.PI * hp) * Math.exp(-hp * 2);
     const fly = E.i3(P(t, T_N + 1.6 + j * 0.07, T_N + 2.2 + j * 0.07));
     T(p.e, { x: p.x + 120 * (1 - v.k) + fly * 820, y: p.y + float(t, j + 2, 8, 1.0) - fly * 120 * (j - 1),
-      r: p.r + (1 - v.k) * 14 + hit * 6 * (j % 2 ? 1 : -1) + fly * (j % 2 ? 50 : -40), s: 1.22 * v.s * (1 + 0.06 * hit),
+      r: p.r + (1 - v.k) * 14 + hit * 6 * (j % 2 ? 1 : -1) + fly * (j % 2 ? 50 : -40), s: v.s * (1 + 0.06 * hit),
       o: (fly >= 1 ? 0 : v.o) * (1 - E.i3(P(fly, 0.55, 1))), b: fly * 5 });
   });
 
@@ -450,8 +455,8 @@ function buildCues() {
   cue(2.7, 'open');
   TAPS.forEach(tp => cue(tp.t, 'tap'));
   SCROLLS.forEach(([a]) => cue(a, 'scroll', 0.5));
-  Object.values(SHIFTS).forEach(([a, b]) => { cue(a, 'kb', 0.45); cue(b, 'kb', 0.35); });
-  ['p', 'c', 'x'].forEach(k => cue(SHIFTS[k][0] + 0.2, 'pop', 0.75));
+  SHIFTS.forEach(({ w: [a, b] }) => { cue(a, 'kb', 0.45); cue(b, 'kb', 0.35); });
+  Object.values(CARD_IN).forEach(a => cue(a, 'pop', 0.75));
   cue(T_C + 1.1, 'toast', 0.8);
   PINS.forEach((_, j) => cue(T_X + 0.75 + j * 0.2 + 0.2, 'drop', 0.9));
   cue(T_R + 0.25, 'notif');

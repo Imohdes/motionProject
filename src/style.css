@@ -233,7 +233,7 @@ svg{display:block}
 #hero{position:absolute;-webkit-mask-image:radial-gradient(closest-side,#000 62%,transparent 100%)}
 #tagline{position:absolute}
 #cta{display:flex;align-items:center;justify-content:center;height:104px;border-radius:24px;background:var(--green);color:#fff;border:2px solid rgba(255,255,255,.35);font:700 54px/1 'SST Arabic';box-shadow:0 18px 40px rgba(0,50,40,.28)}
-.fmt-v #cta{width:880px}
+.fmt-v #cta{width:720px}
 .fmt-h #cta{width:600px;height:92px;font-size:48px;border-radius:22px}
 #cta .arr{width:72px;height:72px;border-radius:20px;background:#fff;color:var(--green);display:grid;place-items:center}
 #cta .arr .ic{width:38px;height:38px;stroke-width:2.6}
@@ -270,3 +270,11 @@ svg{display:block}
 .toast.rem .ti{background:var(--orange)}
 .callout .tag{display:inline-flex;align-items:center;gap:6px;margin-top:16px;padding:11px 20px;border-radius:999px;background:#E3F6EE;color:var(--green);font:700 22px/1 'SST Arabic'}
 .callout .tag .ic{width:22px;height:22px;stroke-width:3.2}
+
+/* compact step cards (stack on the side of the phone) */
+.callout.rowc{width:324px;display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:24px;text-align:right}
+.callout.rowc .ci{width:74px;height:74px;margin:0;flex:none}
+.callout.rowc .ci .ic{width:38px;height:38px}
+.callout.rowc .tx{flex:1;min-width:0}
+.callout.rowc h4{font:700 28px/1.2 'SST Arabic';white-space:nowrap}
+.callout.rowc p{font:400 19px/1.35 'SST Arabic';margin-top:3px;color:var(--ink2);white-space:nowrap}
