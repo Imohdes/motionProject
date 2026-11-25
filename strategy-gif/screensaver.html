@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>الشاشة المؤقتة – الاستراتيجية</title>
+<style>
+  @font-face { font-family: "BrandFont"; font-weight: 400; src: url("fonts/brand-regular.ttf") format("truetype"); }
+  @font-face { font-family: "BrandFont"; font-weight: 700; src: url("fonts/brand-bold.ttf") format("truetype"); }
+
+  /* ألوان الهوية: الأزرق هو المسيطر والخلفية */
+  :root {
+    --blue: #094E87;
+    --blue-deep: #06345C;
+    --green: #05A769;
+    --orange: #DE7B2B;
+    --font: "BrandFont", "Segoe UI", Tahoma, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; background: var(--blue-deep); overflow: hidden; }
+  body { display: grid; place-items: center; font-family: var(--font); color: #fff; }
+  #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; flex: none; transform-origin: center; }
+
+  /* الخلفية: أزرق غامق + صورة مدموجة بشكل خفيف */
+  .base { position: absolute; inset: 0;
+    background: radial-gradient(70% 70% at 50% 40%, #0d5ea0 0%, var(--blue) 45%, var(--blue-deep) 100%); }
+  .photo { position: absolute; inset: -20px; background: url("assets/bg_city.jpg") center / cover no-repeat;
+    opacity: .16; mix-blend-mode: luminosity; filter: saturate(0) contrast(1.1);
+    animation: kenburns 20s ease-in-out infinite alternate; }
+  @keyframes kenburns { from { transform: scale(1); } to { transform: scale(1.07); } }
+  .tint { position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(6,52,92,.0) 55%, rgba(6,52,92,.55) 100%); }
+
+  /* الشرائح */
+  .slide { position: absolute; inset: 0; padding: 80px 120px 90px;
+    display: flex; flex-direction: column; justify-content: center; gap: 64px; opacity: 0; }
+  .slide.active { opacity: 1; }
+  .block { display: flex; flex-direction: column; align-items: center; gap: 34px; }
+
+  .pill { display: inline-flex; align-items: center; gap: 22px; padding: 14px 44px 14px 40px;
+    border-radius: 40px 999px 40px 999px; background: var(--orange);
+    box-shadow: 0 8px 28px rgba(0,0,0,.25); font-size: 46px; font-weight: 700; white-space: nowrap; }
+  .pill svg { width: 52px; height: 52px; }
+  .pill .sep { width: 2px; height: 46px; background: rgba(255,255,255,.8); }
+
+  /* الرؤية والرسالة جنب بعض */
+  .vm { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+  .vm .item { display: flex; flex-direction: column; align-items: flex-start; gap: 26px; }
+  .vm p { font-size: 36px; line-height: 1.6; }
+
+  .cards { display: flex; gap: 26px; width: 100%; }
+  .card { flex: 1; min-height: 230px; padding: 30px 16px; border-radius: 22px; text-align: center;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+    background: rgba(255,255,255,.08); border: 1.5px solid rgba(255,255,255,.22);
+    border-bottom: 4px solid var(--green);
+    font-size: 32px; font-weight: 700; line-height: 1.35; }
+  .card svg { width: 64px; height: 64px; stroke: var(--green); }
+  .goals .card { min-height: 250px; font-size: 27px; font-weight: 400; }
+
+  .themes .card { min-height: 210px; font-size: 38px; border: none; }
+  .themes .card svg { stroke: #fff; }
+  .c-blue   { background: #1767AE !important; }
+  .c-orange { background: var(--orange) !important; }
+  .c-green  { background: var(--green) !important; }
+
+  svg { fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* الحركة */
+  .slide.active .pill { animation: pillIn .8s cubic-bezier(.2,.8,.2,1) both; }
+  .slide.active .fade { animation: rise .8s cubic-bezier(.2,.8,.2,1) both; }
+  .slide.active .card { animation: cardIn .7s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes pillIn { from { opacity: 0; transform: translateX(60px) scale(.92); } to { opacity: 1; transform: none; } }
+  @keyframes rise   { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: none; } }
+  @keyframes cardIn { from { opacity: 0; transform: translateY(50px) scale(.94); } to { opacity: 1; transform: none; } }
+  .slide.active .out { animation: none; }
+  .fadeout { animation: fadeOut .7s ease both !important; }
+  @keyframes fadeOut { to { opacity: 0; } }
+  .render .photo { animation: none; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="base"></div><div class="photo"></div><div class="tint"></div>
+
+  <!-- الشريحة 1: الرؤية والرسالة + الركائز -->
+  <section class="slide">
+    <div class="vm">
+      <div class="item">
+        <div class="pill" style="animation-delay:.1s"><svg viewBox="0 0 48 48"><path d="M4 24s7-12 20-12 20 12 20 12-7 12-20 12S4 24 4 24z"/><circle cx="24" cy="24" r="6"/></svg><span class="sep"></span><span>الرؤية</span></div>
+        <p class="fade" style="animation-delay:.4s">بناء قوى عاملة وطنية ذات مهارة عالية ومستدامة تدعم في تحقيق طموحات المملكة</p>
+      </div>
+      <div class="item">
+        <div class="pill" style="animation-delay:.7s"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18"/><circle cx="24" cy="24" r="11"/><circle cx="24" cy="24" r="4"/><path d="M24 24 40 8M34 8h6v6"/></svg><span class="sep"></span><span>الرسالة</span></div>
+        <p class="fade" style="animation-delay:1s">دعم الجهود في تأهيل القوى الوطنية وتدريبها وتوظيفها في القطاع الخاص، من خلال حزمة من البرامج الموجهة بما يعزز المواءمة بين العرض والطلب في سوق العمل</p>
+      </div>
+    </div>
+    <div class="block">
+      <div class="pill" style="animation-delay:1.5s"><svg viewBox="0 0 48 48"><path d="M24 6 4 16l20 10 20-10z"/><path d="m4 24 20 10 20-10"/><path d="m4 32 20 10 20-10"/></svg><span class="sep"></span><span>الركائز الاستراتيجية</span></div>
+      <div class="cards">
+        <div class="card" style="animation-delay:1.8s"><svg viewBox="0 0 48 48"><circle cx="24" cy="14" r="6"/><circle cx="11" cy="18" r="4.5"/><circle cx="37" cy="18" r="4.5"/><path d="M14 40v-4a10 10 0 0 1 20 0v4M3 38v-2a8 8 0 0 1 10-7.7M45 38v-2a8 8 0 0 0-10-7.7"/></svg>تمكين<br>المستفيد</div>
+        <div class="card" style="animation-delay:1.95s"><svg viewBox="0 0 48 48"><path d="M6 42h36M10 42V30h6v12M21 42V22h6v20M32 42V12h6v30"/></svg>الاعتماد على<br>التحليلات المتقدمة</div>
+        <div class="card" style="animation-delay:2.1s"><svg viewBox="0 0 48 48"><path d="M18 34h12M19 40h10M24 8a11 11 0 0 0-7 19.5c1.3 1.2 2 2.5 2 4V34h10v-2.5c0-1.5.7-2.8 2-4A11 11 0 0 0 24 8zM24 2v2M6 18H4M44 18h-2M10 6l1.5 1.5M38 6l-1.5 1.5"/></svg>تعزيز<br>الابتكار</div>
+        <div class="card" style="animation-delay:2.25s"><svg viewBox="0 0 48 48"><rect x="8" y="10" width="32" height="22" rx="2"/><path d="M3 38h42"/></svg>التمكين<br>التقني</div>
+        <div class="card" style="animation-delay:2.4s"><svg viewBox="0 0 48 48"><circle cx="24" cy="18" r="12"/><path d="m24 12 2 4.2 4.5.5-3.3 3 1 4.5L24 22l-4.2 2.2 1-4.5-3.3-3 4.5-.5zM16 28l-4 16 6-3 4 5 2-8M32 28l4 16-6-3-4 5-2-8"/></svg>التميز<br>المؤسسي</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- الشريحة 2: المحاور + الأهداف -->
+  <section class="slide">
+    <div class="block">
+      <div class="pill" style="animation-delay:.1s"><svg viewBox="0 0 48 48"><circle cx="12" cy="24" r="5"/><circle cx="36" cy="11" r="5"/><circle cx="36" cy="37" r="5"/><path d="m16.5 21.5 15-8M16.5 26.5l15 8"/></svg><span class="sep"></span><span>محاور الاستراتيجية</span></div>
+      <div class="cards themes">
+        <div class="card c-blue" style="animation-delay:.4s"><svg viewBox="0 0 48 48"><circle cx="24" cy="14" r="6"/><circle cx="11" cy="18" r="4.5"/><circle cx="37" cy="18" r="4.5"/><path d="M14 40v-4a10 10 0 0 1 20 0v4M3 38v-2a8 8 0 0 1 10-7.7M45 38v-2a8 8 0 0 0-10-7.7"/></svg><span>تكامل القوى العاملة</span></div>
+        <div class="card c-orange" style="animation-delay:.6s"><svg viewBox="0 0 48 48"><path d="M2 18 24 8l22 10-22 10z"/><path d="M11 22v10c0 3 6 7 13 7s13-4 13-7V22M44 19v12"/></svg><span>تطوير المواهب</span></div>
+        <div class="card c-green" style="animation-delay:.8s"><svg viewBox="0 0 48 48"><path d="m24 3 1.8 3.6 4 .6-2.9 2.8.7 4L24 12.1 20.4 14l.7-4-2.9-2.8 4-.6z"/><circle cx="24" cy="24" r="4.5"/><circle cx="11" cy="27" r="4"/><circle cx="37" cy="27" r="4"/><path d="M16 42v-3a8 8 0 0 1 16 0v3M3 42v-2a7 7 0 0 1 11-5.7M45 42v-2a7 7 0 0 0-11-5.7"/></svg><span>شريك المسار المهني</span></div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="pill" style="animation-delay:1.3s"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18"/><circle cx="24" cy="24" r="11"/><circle cx="24" cy="24" r="4"/><path d="M24 24 40 8M34 8h6v6"/></svg><span class="sep"></span><span>الأهداف الاستراتيجية</span></div>
+      <div class="cards goals">
+        <div class="card" style="animation-delay:1.6s"><svg viewBox="0 0 48 48"><circle cx="24" cy="14" r="6"/><circle cx="11" cy="18" r="4.5"/><circle cx="37" cy="18" r="4.5"/><path d="M14 40v-4a10 10 0 0 1 20 0v4M3 38v-2a8 8 0 0 1 10-7.7M45 38v-2a8 8 0 0 0-10-7.7"/></svg>تعزيز شمولية التوظيف في سوق العمل</div>
+        <div class="card" style="animation-delay:1.75s"><svg viewBox="0 0 48 48"><path d="M6 42h36M10 42V32h6v10M21 42V24h6v18M32 42V16h6v26M8 26 20 14l6 5L42 6M34 6h8v8"/></svg>رفع مهارات القوى العاملة السعودية</div>
+        <div class="card" style="animation-delay:1.9s"><svg viewBox="0 0 48 48"><path d="M24 6 4 16l20 10 20-10z"/><path d="m4 24 20 10 20-10"/><path d="m4 32 20 10 20-10"/></svg>معالجة<br>الفجوات الهيكلية</div>
+        <div class="card" style="animation-delay:2.05s"><svg viewBox="0 0 48 48"><path d="M24 4 8 10v12c0 10 7 18 16 22 9-4 16-12 16-22V10z"/><path d="m17 24 5 5 9-10"/></svg>تمكين الموظفين في الوظائف الأكثر عرضة للمخاطر</div>
+        <div class="card" style="animation-delay:2.2s"><svg viewBox="0 0 48 48"><path d="M8 18h8a4 4 0 1 1 8 0h8v8a4 4 0 1 0 0 8v8H8v-8a4 4 0 1 1 0-8z"/></svg>تحسين<br>المواءمة الوظيفية</div>
+        <div class="card" style="animation-delay:2.35s"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18"/><circle cx="24" cy="24" r="11"/><circle cx="24" cy="24" r="4"/><path d="M24 24 40 8M34 8h6v6"/></svg>تمكين مسارات مهنية هادفة</div>
+      </div>
+    </div>
+  </section>
+</div>
+<script>
+  const stage = document.getElementById('stage');
+  const fit = () => stage.style.transform = `scale(${Math.min(innerWidth / 1920, innerHeight / 1080)})`;
+  addEventListener('resize', fit); fit();
+  const slides = [...document.querySelectorAll('.slide')];
+  const HOLD = 10000; let i = -1;
+  function go(n) {
+    slides.forEach(s => s.classList.remove('active'));
+    i = (n + slides.length) % slides.length;
+    void slides[i].offsetWidth; slides[i].classList.add('active');
+    setTimeout(() => go(i + 1), HOLD);
+  }
+  const q = new URLSearchParams(location.search);
+  if (q.get('render')) {
+    document.documentElement.classList.add('render');
+    window.showAt = (n, ms, fadeOut) => {
+      slides.forEach((s, k) => { s.classList.toggle('active', k === n); s.style.opacity = ''; });
+      document.getAnimations().forEach(a => { a.pause(); a.currentTime = ms; });
+      slides[n].style.opacity = fadeOut == null ? '' : String(fadeOut);
+    };
+  } else go(0);
+</script>
+</body>
+</html>
