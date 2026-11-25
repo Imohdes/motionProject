@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>الشاشة المؤقتة – الاستراتيجية</title>
+<style>
+  @font-face { font-family: "SST"; font-weight: 400; src: url("fonts/brand-regular.ttf"); }
+  @font-face { font-family: "SST"; font-weight: 700; src: url("fonts/brand-bold.ttf"); }
+  :root { --blue:#094E87; --blue2:#1A6BB0; --deep:#06345C; --green:#05A769; --orange:#DE7B2B; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--deep); font-family: "SST", sans-serif; color: #fff; }
+  #stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; }
+
+  /* خلفية الهوية: صورة الزجاج + طبقة زرقاء */
+  .glass { position: absolute; inset: -30px; background: url("assets/glass.jpg") center / cover; animation: kb 20s ease-in-out infinite alternate; }
+  @keyframes kb { to { transform: scale(1.06) translateX(-20px); } }
+  .veil { position: absolute; inset: 0;
+    background:
+      linear-gradient(115deg, rgba(6,52,92,.92) 0%, rgba(9,78,135,.78) 45%, rgba(9,78,135,.55) 100%); }
+
+  .logo { position: absolute; top: 56px; right: 96px; width: 300px; }
+
+  .slide { position: absolute; inset: 0; padding: 250px 110px 60px; display: flex; flex-direction: column; justify-content: center; gap: 44px; opacity: 0; }
+  .slide.active { opacity: 1; }
+
+  /* عنوان بأسلوب القالب: الورقة + العنوان + خط */
+  .head { display: flex; align-items: center; gap: 20px; }
+  .head img { height: 64px; }
+  .head h2 { font-size: 46px; font-weight: 700; white-space: nowrap; }
+  .head .line { flex: 1; height: 2px; background: linear-gradient(to left, rgba(255,255,255,.45), rgba(255,255,255,0)); }
+  .slide-title { position: absolute; top: 74px; right: 470px; display: flex; align-items: center; gap: 22px; }
+  .slide-title .num { font-size: 64px; font-weight: 700; }
+  .slide-title .bar { width: 4px; height: 64px; background: var(--green); }
+  .slide-title .t { font-size: 40px; font-weight: 700; }
+
+  /* الرؤية والرسالة: ألواح زجاجية */
+  .vm { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+  .panel { padding: 34px 40px 38px; border-radius: 28px 0 28px 0; background: rgba(255,255,255,.1);
+    border: 1.5px solid rgba(255,255,255,.25); backdrop-filter: blur(10px); }
+  .panel .head { margin-bottom: 18px; }
+  .panel .head h2 { font-size: 42px; }
+  .panel p { font-size: 31px; line-height: 1.6; }
+
+  .row { display: flex; gap: 24px; }
+  /* بطاقات بأسلوب القالب: تدرج أزرق مع لمعة قطرية */
+  .card { position: relative; flex: 1; min-height: 210px; padding: 28px 14px 26px; border-radius: 26px 0 26px 0; overflow: hidden;
+    background: linear-gradient(120deg, #0B4C86 0%, #1A6BB0 55%, #0B4C86 100%);
+    box-shadow: 0 12px 30px rgba(0,20,50,.35);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+    text-align: center; font-size: 30px; font-weight: 700; line-height: 1.35; }
+  .card::before { content: ""; position: absolute; top: -20%; bottom: -20%; left: 18%; width: 22%;
+    background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.16), rgba(255,255,255,0)); transform: skewX(-25deg); }
+  .card > * { position: relative; }
+  .card svg { width: 60px; height: 60px; }
+  .badge { position: absolute !important; top: 0; right: 0; width: 54px; height: 54px; display: grid; place-items: center;
+    font-size: 24px; font-weight: 700; border-radius: 0 0 0 16px; background: var(--green); }
+
+  .theme { min-height: 190px; font-size: 38px; }
+  .theme.o { background: linear-gradient(120deg, #C9661C, #E88B3E 55%, #C9661C); }
+  .theme.g { background: linear-gradient(120deg, #038553, #10B877 55%, #038553); }
+
+  /* الأهداف: بطاقات بيضاء ونص أزرق مثل شرائح المحتوى */
+  .goal { background: #fff; color: var(--blue); font-weight: 700; font-size: 25px; min-height: 230px; padding-top: 34px; }
+  .goal::before { display: none; }
+  .goal svg { stroke: var(--green); }
+  .goal .badge { color: #fff; background: var(--blue); }
+
+  svg { fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* الحركة */
+  .slide.active .a { animation: up .8s cubic-bezier(.2,.8,.2,1) both; }
+  .slide.active .h { animation: inR .8s cubic-bezier(.2,.8,.2,1) both; }
+  .slide.active .line { animation: grow 1s ease both; transform-origin: right; animation-delay: inherit; }
+  @keyframes up { from { opacity: 0; transform: translateY(46px) scale(.95); } to { opacity: 1; transform: none; } }
+  @keyframes inR { from { opacity: 0; transform: translateX(70px); } to { opacity: 1; transform: none; } }
+  @keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  .render .glass { animation-play-state: paused; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="glass"></div><div class="veil"></div>
+  <img class="logo" src="assets/logo-white.svg" alt="">
+
+  <!-- الشريحة 1 -->
+  <section class="slide">
+    <div class="slide-title h" style="animation-delay:.05s"><span class="num">01</span><span class="bar"></span><span class="t">استراتيجية الصندوق</span></div>
+    <div class="vm">
+      <div class="panel a" style="animation-delay:.3s">
+        <div class="head"><img src="assets/leaf.png" alt=""><h2>الرؤية</h2></div>
+        <p>بناء قوى عاملة وطنية ذات مهارة عالية ومستدامة تدعم في تحقيق طموحات المملكة</p>
+      </div>
+      <div class="panel a" style="animation-delay:.7s">
+        <div class="head"><img src="assets/leaf.png" alt=""><h2>الرسالة</h2></div>
+        <p>دعم الجهود في تأهيل القوى الوطنية وتدريبها وتوظيفها في القطاع الخاص، من خلال حزمة من البرامج الموجهة بما يعزز المواءمة بين العرض والطلب في سوق العمل</p>
+      </div>
+    </div>
+    <div class="head h" style="animation-delay:1.3s"><img src="assets/leaf.png" alt=""><h2>الركائز الاستراتيجية</h2><span class="line"></span></div>
+    <div class="row">
+      <div class="card a" style="animation-delay:1.6s"><span class="badge">01</span><svg viewBox="0 0 48 48"><circle cx="24" cy="14" r="6"/><circle cx="11" cy="18" r="4.5"/><circle cx="37" cy="18" r="4.5"/><path d="M14 40v-4a10 10 0 0 1 20 0v4M3 38v-2a8 8 0 0 1 10-7.7M45 38v-2a8 8 0 0 0-10-7.7"/></svg><span>تمكين<br>المستفيد</span></div>
+      <div class="card a" style="animation-delay:1.75s"><span class="badge">02</span><svg viewBox="0 0 48 48"><path d="M6 42h36M10 42V30h6v12M21 42V22h6v20M32 42V12h6v30"/></svg><span>الاعتماد على<br>التحليلات المتقدمة</span></div>
+      <div class="card a" style="animation-delay:1.9s"><span class="badge">03</span><svg viewBox="0 0 48 48"><path d="M18 34h12M19 40h10M24 8a11 11 0 0 0-7 19.5c1.3 1.2 2 2.5 2 4V34h10v-2.5c0-1.5.7-2.8 2-4A11 11 0 0 0 24 8zM24 2v2M6 18H4M44 18h-2M10 6l1.5 1.5M38 6l-1.5 1.5"/></svg><span>تعزيز<br>الابتكار</span></div>
+      <div class="card a" style="animation-delay:2.05s"><span class="badge">04</span><svg viewBox="0 0 48 48"><rect x="8" y="10" width="32" height="22" rx="2"/><path d="M3 38h42"/></svg><span>التمكين<br>التقني</span></div>
+      <div class="card a" style="animation-delay:2.2s"><span class="badge">05</span><svg viewBox="0 0 48 48"><circle cx="24" cy="18" r="12"/><path d="m24 12 2 4.2 4.5.5-3.3 3 1 4.5L24 22l-4.2 2.2 1-4.5-3.3-3 4.5-.5zM16 28l-4 16 6-3 4 5 2-8M32 28l4 16-6-3-4 5-2-8"/></svg><span>التميز<br>المؤسسي</span></div>
+    </div>
+  </section>
+
+  <!-- الشريحة 2 -->
+  <section class="slide">
+    <div class="slide-title h" style="animation-delay:.05s"><span class="num">02</span><span class="bar"></span><span class="t">استراتيجية الصندوق</span></div>
+    <div class="head h" style="animation-delay:.2s"><img src="assets/leaf.png" alt=""><h2>محاور الاستراتيجية</h2><span class="line"></span></div>
+    <div class="row">
+      <div class="card theme a" style="animation-delay:.45s"><svg viewBox="0 0 48 48"><circle cx="24" cy="14" r="6"/><circle cx="11" cy="18" r="4.5"/><circle cx="37" cy="18" r="4.5"/><path d="M14 40v-4a10 10 0 0 1 20 0v4M3 38v-2a8 8 0 0 1 10-7.7M45 38v-2a8 8 0 0 0-10-7.7"/></svg><span>تكامل القوى العاملة</span></div>
+      <div class="card theme o a" style="animation-delay:.65s"><svg viewBox="0 0 48 48"><path d="M2 18 24 8l22 10-22 10z"/><path d="M11 22v10c0 3 6 7 13 7s13-4 13-7V22M44 19v12"/></svg><span>تطوير المواهب</span></div>
+      <div class="card theme g a" style="animation-delay:.85s"><svg viewBox="0 0 48 48"><path d="m24 3 1.8 3.6 4 .6-2.9 2.8.7 4L24 12.1 20.4 14l.7-4-2.9-2.8 4-.6z"/><circle cx="24" cy="24" r="4.5"/><circle cx="11" cy="27" r="4"/><circle cx="37" cy="27" r="4"/><path d="M16 42v-3a8 8 0 0 1 16 0v3M3 42v-2a7 7 0 0 1 11-5.7M45 42v-2a7 7 0 0 0-11-5.7"/></svg><span>شريك المسار المهني</span></div>
+    </div>
+    <div class="head h" style="animation-delay:1.3s"><img src="assets/leaf.png" alt=""><h2>الأهداف الاستراتيجية</h2><span class="line"></span></div>
+    <div class="row">
+      <div class="card goal a" style="animation-delay:1.6s"><span class="badge">01</span><svg viewBox="0 0 48 48"><circle cx="24" cy="14" r="6"/><circle cx="11" cy="18" r="4.5"/><circle cx="37" cy="18" r="4.5"/><path d="M14 40v-4a10 10 0 0 1 20 0v4M3 38v-2a8 8 0 0 1 10-7.7M45 38v-2a8 8 0 0 0-10-7.7"/></svg><span>تعزيز شمولية التوظيف في سوق العمل</span></div>
+      <div class="card goal a" style="animation-delay:1.75s"><span class="badge">02</span><svg viewBox="0 0 48 48"><path d="M6 42h36M10 42V32h6v10M21 42V24h6v18M32 42V16h6v26M8 26 20 14l6 5L42 6M34 6h8v8"/></svg><span>رفع مهارات القوى العاملة السعودية</span></div>
+      <div class="card goal a" style="animation-delay:1.9s"><span class="badge">03</span><svg viewBox="0 0 48 48"><path d="M24 6 4 16l20 10 20-10z"/><path d="m4 24 20 10 20-10"/><path d="m4 32 20 10 20-10"/></svg><span>معالجة<br>الفجوات الهيكلية</span></div>
+      <div class="card goal a" style="animation-delay:2.05s"><span class="badge">04</span><svg viewBox="0 0 48 48"><path d="M24 4 8 10v12c0 10 7 18 16 22 9-4 16-12 16-22V10z"/><path d="m17 24 5 5 9-10"/></svg><span>تمكين الموظفين في الوظائف الأكثر عرضة للمخاطر</span></div>
+      <div class="card goal a" style="animation-delay:2.2s"><span class="badge">05</span><svg viewBox="0 0 48 48"><path d="M8 18h8a4 4 0 1 1 8 0h8v8a4 4 0 1 0 0 8v8H8v-8a4 4 0 1 1 0-8z"/></svg><span>تحسين<br>المواءمة الوظيفية</span></div>
+      <div class="card goal a" style="animation-delay:2.35s"><span class="badge">06</span><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18"/><circle cx="24" cy="24" r="11"/><circle cx="24" cy="24" r="4"/><path d="M24 24 40 8M34 8h6v6"/></svg><span>تمكين مسارات مهنية هادفة</span></div>
+    </div>
+  </section>
+</div>
+<script>
+  const slides = [...document.querySelectorAll('.slide')];
+  document.documentElement.classList.add('render');
+  window.showAt = (n, ms, fade) => {
+    slides.forEach((s, k) => { s.classList.toggle('active', k === n); s.style.opacity = ''; });
+    document.getAnimations().forEach(a => {
+      a.pause();
+      const el = a.effect && a.effect.target;
+      a.currentTime = (el && el.classList && el.classList.contains('glass')) ? 0 : ms;
+    });
+    if (fade != null) slides[n].style.opacity = String(fade);
+  };
+</script>
+</body>
+</html>
