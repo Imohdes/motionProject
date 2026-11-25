@@ -241,15 +241,20 @@ const sdots = [1, 2, 3, 4, 5].map((n, i) => { const e = add(stl, `<div class="sd
 
 // ---------- end card
 const endcard = add(root, `<div id="endcard"><div id="endbg"></div></div>`);
-const hero = add(endcard, `<img id="hero" class="a" src="${IMG}hero.png">`);
-const tagline = add(endcard, `<img id="tagline" class="a" src="${IMG}tagline.png">`);
+// 9:16 uses the supplied key visual split into layers (scripts/prep_endcard.py); 16:9 keeps the banner crops
+const hero = add(endcard, `<img id="hero" class="a" src="${IMG}${V ? 'end_hero.png' : 'hero.png'}">`);
+const tagline = add(endcard, `<img id="tagline" class="a" src="${IMG}${V ? 'end_tagline.png' : 'tagline.png'}">`);
 const cta = add(endcard, `<div id="cta" class="a">سجّل الآن</div>`);
 const ctasub = add(endcard, `<div id="ctasub" class="a">${CONFIG.url || 'التسجيل إلكتروني • بدون أوراق'}</div>`);
 if (CONFIG.url) ctasub.style.direction = 'ltr';
 const endbg = $('#endbg', endcard);
 if (V) {
-  hero.style.width = '1180px'; place(hero, 540, 965); tagline.style.width = '560px'; place(tagline, 540, 395);
-  place(cta, 540, 1430); place(ctasub, 540, 1535);
+  // source art is 1125x2000 → frame scale 0.96; free bands kept at the top (~0-240) and bottom (~1650-1920) for logos
+  const F = 1080 / 1125;
+  hero.style.webkitMaskImage = 'none';
+  hero.style.width = (1102 * F) + 'px'; place(hero, 540 + (551 - 562.5) * F, 990);
+  tagline.style.width = (739 * F * 0.9) + 'px'; place(tagline, 540 + (561.5 - 562.5) * F * 0.9, 410);
+  place(cta, 540, 1495); place(ctasub, 540, 1597);
 } else {
   hero.style.width = '1060px'; place(hero, 560, 590); tagline.style.width = '450px'; place(tagline, 1340, 420);
   place(cta, 1340, 740); place(ctasub, 1340, 835);
