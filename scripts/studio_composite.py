@@ -70,6 +70,13 @@ def render(k):
     A, P = load_person(s)
     A3 = A[..., None]
 
+    if os.environ.get("RED_BOOST"):   # deepen the shemagh reds toward the reference photo
+        hsv = cv2.cvtColor(np.clip(P, 0, 255).astype(np.uint8), cv2.COLOR_BGR2HSV).astype(np.float32)
+        red = (((hsv[..., 0] < 4) | (hsv[..., 0] > 165)) & (hsv[..., 1] > 60)).astype(np.float32)   # shemagh red only (skin hue is 8-21)
+        red = cv2.GaussianBlur(red, (0, 0), 1.0) * A
+        hsv[..., 1] = np.clip(hsv[..., 1] * (1 + 0.35 * red), 0, 255)
+        hsv[..., 2] = hsv[..., 2] * (1 - 0.10 * red)
+        P = cv2.cvtColor(hsv.astype(np.uint8), cv2.COLOR_HSV2BGR).astype(np.float32)
     # detail: gentle unsharp to bring texture back to the AI-smooth skin/cloth
     P = P + (P - cv2.GaussianBlur(P, (0, 0), 1.1)) * 0.45
 
