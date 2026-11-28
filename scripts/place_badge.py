@@ -15,7 +15,8 @@ a = cv2.warpAffine(a, M, (a.shape[1], a.shape[0]), flags=cv2.INTER_CUBIC)
 hh, ww = a.shape
 gy, gx = np.mgrid[0:hh, 0:ww]
 b = b * (1.02 - 0.07 * (gx / ww) - 0.05 * (gy / hh))[..., None] * 0.98
-ox, oy = 565 - pad, 581 - pad
+POS = [int(v) for v in sys.argv[sys.argv.index("--pos") + 1].split(",")] if "--pos" in sys.argv else [565, 581]
+ox, oy = POS[0] - pad, POS[1] - pad
 out = new.copy()
 for off, blur, op in (((4, 7), 5, 0.30), ((1, 2), 1.5, 0.22)):
     sh = np.zeros((H, W), np.float32)
@@ -28,6 +29,6 @@ out = np.clip(out, 0, 255).astype(np.uint8)
 Image.fromarray(out).save(out_full)
 r = cv2.resize(out, (1080, round(H * 1080 / W)), interpolation=cv2.INTER_AREA); t = (r.shape[0] - 1920) // 2
 Image.fromarray(r[t:t + 1920]).save(out_screen)
-if len(sys.argv) > 6:
-    Image.fromarray(cv2.resize(out[540:760, 520:700], None, fx=3, fy=3, interpolation=cv2.INTER_CUBIC)).save(sys.argv[6], quality=92)
+if len(sys.argv) > 6 and not sys.argv[6].startswith("--"):
+    Image.fromarray(cv2.resize(out[POS[1] - 40:POS[1] + 180, POS[0] - 45:POS[0] + 135], None, fx=3, fy=3, interpolation=cv2.INTER_CUBIC)).save(sys.argv[6], quality=92)
 print("saved", out.shape)
